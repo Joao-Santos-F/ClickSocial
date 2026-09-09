@@ -1,3 +1,9 @@
+<<<<<<< HEAD
+import ProfileScreen from "./screens/ProfileScreen";
+
+export default function App() {
+  return <ProfileScreen />;
+=======
 import React, { useState, useEffect } from "react";
 import { Platform } from "react-native";
 import LoginScreen from "./screens/LoginScreen";
@@ -24,4 +30,5 @@ export default function App() {
   }
 
   return <LoginScreen aoNavegarCadastro={() => setTelaAtual("cadastro")} />;
+>>>>>>> 119d39536a5b7c3d51b45c7f298bb1ec6f984a36
 }
