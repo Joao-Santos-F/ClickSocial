@@ -1,6 +1,7 @@
-export { IconeCabecalho } from "./IconeCabecalho";
-export { CampoTexto } from "./CampoTexto";
-export { BotaoPrincipal } from "./BotaoPrincipal";
-export { Divisor } from "./Divisor";
-export { BotaoGoogle } from "./BotaoGoogle";
-export { LinkRodape } from "./LinkRodape";
+export { IconeCabecalho } from "./IconeCabecalho/IconeCabecalho";
+export { CampoTexto } from "./CampoTexto/CampoTexto";
+export { BotaoPrincipal } from "./BotaoPrincipal/BotaoPrincipal";
+export { Divisor } from "./Divisor/Divisor";
+export { BotaoGoogle } from "./BotaoGoogle/BotaoGoogle";
+export { LinkRodape } from "./LinkRodape/LinkRodape";
+export { CampoFoto } from "./CampoFoto/CampoFoto";
