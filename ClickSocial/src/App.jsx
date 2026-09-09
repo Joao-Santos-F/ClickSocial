@@ -1,5 +1,7 @@
-import LoginScreen from "./screens/LoginScreen";
+import NotificationsScreen from "./screens/NotificationsScreen";
+import InicialScreen from "./screens/InicialScreen";
 
 export default function App() {
-  return <LoginScreen />;
+  return <NotificationsScreen />;
+  // return <InicialScreen />
 }
