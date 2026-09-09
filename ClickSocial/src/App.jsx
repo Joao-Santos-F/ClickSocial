@@ -1,5 +1,5 @@
-import LoginScreen from "./screens/LoginScreen";
+import ProfileScreen from "./screens/ProfileScreen";
 
 export default function App() {
-  return <LoginScreen />;
+  return <ProfileScreen />;
 }
