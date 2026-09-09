@@ -12,35 +12,39 @@ import { StatusBar } from "expo-status-bar";
 import { LinearGradient } from "expo-linear-gradient";
 import { theme } from "../styles/theme";
 
+// Importação dos componentes modulares em PT-BR
 import {
   IconeCabecalho,
   CampoTexto,
+  CampoFoto,
   BotaoPrincipal,
-  Divisor,
-  BotaoGoogle,
   LinkRodape,
 } from "../components";
 
-export default function LoginScreen({ aoNavegarCadastro }) {
+export default function CadastroScreen({ aoNavegarLogin }) {
+  const [nomeCompleto, setNomeCompleto] = useState("");
+  const [nomeUsuario, setNomeUsuario] = useState("");
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
+  const [fotoUri, setFotoUri] = useState(null);
   const [carregando, setCarregando] = useState(false);
 
-  const lidarComLogin = () => {
-    if (!email || !senha) {
-      Alert.alert("Atenção", "Por favor, preencha os campos de e-mail e senha.");
+  const lidarComCadastro = () => {
+    if (!nomeCompleto || !nomeUsuario || !email || !senha) {
+      Alert.alert(
+        "Campos Obrigatórios",
+        "Por favor, preencha todos os campos marcados com (*)."
+      );
       return;
     }
 
     setCarregando(true);
     setTimeout(() => {
       setCarregando(false);
-      Alert.alert("Sucesso", `Login efetuado com o e-mail: ${email}`);
+      Alert.alert("Sucesso", "Conta criada com sucesso!", [
+        { text: "OK", onPress: () => aoNavegarLogin && aoNavegarLogin() },
+      ]);
     }, 1200);
-  };
-
-  const lidarComLoginGoogle = () => {
-    Alert.alert("Google Login", "Iniciando autenticação com a conta Google...");
   };
 
   return (
@@ -61,7 +65,25 @@ export default function LoginScreen({ aoNavegarCadastro }) {
           <View style={styles.cartao}>
             <IconeCabecalho tamanho={60} />
 
-            <Text style={styles.titulo}>Login</Text>
+            <Text style={styles.titulo}>Cadastro</Text>
+
+            <CampoTexto
+              rotulo="Nome Completo"
+              textoAjuda="Digite seu Nome"
+              valor={nomeCompleto}
+              aoMudarTexto={setNomeCompleto}
+              capitalizacaoAutomatica="words"
+              obrigatorio
+            />
+
+            <CampoTexto
+              rotulo="Nome de Usuário"
+              textoAjuda="Digite seu User"
+              valor={nomeUsuario}
+              aoMudarTexto={setNomeUsuario}
+              capitalizacaoAutomatica="none"
+              obrigatorio
+            />
 
             <CampoTexto
               rotulo="E-mail"
@@ -70,6 +92,7 @@ export default function LoginScreen({ aoNavegarCadastro }) {
               aoMudarTexto={setEmail}
               tipoTeclado="email-address"
               capitalizacaoAutomatica="none"
+              obrigatorio
             />
 
             <CampoTexto
@@ -78,22 +101,25 @@ export default function LoginScreen({ aoNavegarCadastro }) {
               valor={senha}
               aoMudarTexto={setSenha}
               senhaSegura
+              obrigatorio
+            />
+
+            <CampoFoto
+              rotulo="Foto de Perfil"
+              textoAjuda="Insira sua Foto"
+              aoSelecionarFoto={setFotoUri}
             />
 
             <BotaoPrincipal
-              titulo="Entrar"
-              aoPressionar={lidarComLogin}
+              titulo="Criar Conta"
+              aoPressionar={lidarComCadastro}
               carregando={carregando}
             />
 
-            <Divisor texto="ou" />
-
-            <BotaoGoogle aoPressionar={lidarComLoginGoogle} />
-
             <LinkRodape
-              textoPergunta="Não tem uma conta?"
-              textoAcao="Cadastra-se"
-              aoPressionarAcao={aoNavegarCadastro}
+              textoPergunta="Tem uma conta?"
+              textoAcao="Faça Login"
+              aoPressionarAcao={aoNavegarLogin}
             />
           </View>
         </ScrollView>

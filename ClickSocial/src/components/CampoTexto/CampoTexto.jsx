@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, StyleSheet } from "react-native";
-import { theme } from "../styles/theme";
+import { theme } from "../../styles/theme";
 
 export function CampoTexto({
   rotulo,
@@ -10,17 +10,20 @@ export function CampoTexto({
   senhaSegura,
   tipoTeclado = "default",
   capitalizacaoAutomatica = "none",
+  obrigatorio = false,
 }) {
   const [estaFocado, setEstaFocado] = useState(false);
 
   return (
     <View style={styles.container}>
-      {rotulo && <Text style={styles.rotulo}>{rotulo}</Text>}
+      {rotulo && (
+        <Text style={styles.rotulo}>
+          {rotulo}
+          {obrigatorio && <Text style={styles.asterisco}> *</Text>}
+        </Text>
+      )}
       <TextInput
-        style={[
-          styles.campo,
-          estaFocado && styles.campoFocado,
-        ]}
+        style={[styles.campo, estaFocado && styles.campoFocado]}
         placeholder={textoAjuda}
         placeholderTextColor={theme.colors.inputPlaceholder}
         value={valor}
@@ -45,6 +48,10 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: theme.colors.textPrimary,
     marginBottom: 6,
+  },
+  asterisco: {
+    color: "#D32F2F",
+    fontWeight: "700",
   },
   campo: {
     width: "100%",

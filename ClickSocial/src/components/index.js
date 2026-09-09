@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // Componentes de Autenticação / Formulário
 export { IconeCabecalho } from "./IconeCabecalho";
 export { CampoTexto } from "./CampoTexto";
@@ -17,3 +18,12 @@ export { NavegacaoInferior, ITENS_NAV_PADRAO } from "./NavegacaoInferior";
 
 // Biblioteca de Ícones Vetoriais SVG
 export * from "./IconesSvg";
+=======
+export { IconeCabecalho } from "./IconeCabecalho/IconeCabecalho";
+export { CampoTexto } from "./CampoTexto/CampoTexto";
+export { BotaoPrincipal } from "./BotaoPrincipal/BotaoPrincipal";
+export { Divisor } from "./Divisor/Divisor";
+export { BotaoGoogle } from "./BotaoGoogle/BotaoGoogle";
+export { LinkRodape } from "./LinkRodape/LinkRodape";
+export { CampoFoto } from "./CampoFoto/CampoFoto";
+>>>>>>> 119d39536a5b7c3d51b45c7f298bb1ec6f984a36
