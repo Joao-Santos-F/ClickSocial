@@ -4,6 +4,8 @@ import LoginScreen from "./screens/LoginScreen";
 import CadastroScreen from "./screens/CadastroScreen";
 import iconLogo from "../assets/incon_logo.png";
 
+// Apenas para dar o commit, ignore
+
 export default function App() {
   const [telaAtual, setTelaAtual] = useState("login");
 
