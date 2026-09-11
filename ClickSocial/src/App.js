@@ -1,15 +1,32 @@
-import React from 'react';
-import { StatusBar } from 'react-native';
-import EditarPerfil from './screens/EditarPerfil';
-// Para exibir a tela de Comentários de forma independente, descomente a linha abaixo:
-// import Comentario from './screens/Comentario';
+import React, { useState } from 'react';
+import { StatusBar, StyleSheet, View } from 'react-native';
+import { Perfil, EditarPerfil, Comentario } from './screens';
 
 export default function App() {
+  const [telaAtual, setTelaAtual] = useState('perfil');
+
   return (
-    <>
+    <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#211C52" />
-      <EditarPerfil />
-      {/* <Comentario /> */}
-    </>
+      
+      {telaAtual === 'perfil' && (
+        <Perfil onEditar={() => setTelaAtual('editarPerfil')} />
+      )}
+      
+      {telaAtual === 'editarPerfil' && (
+        <EditarPerfil onBack={() => setTelaAtual('perfil')} />
+      )}
+      
+      {telaAtual === 'comentario' && (
+        <Comentario onBack={() => setTelaAtual('perfil')} />
+      )}
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#0D0914',
+  },
+});

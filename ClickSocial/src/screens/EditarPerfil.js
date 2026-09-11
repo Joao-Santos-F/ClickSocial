@@ -12,7 +12,7 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
 
-export default function EditarPerfil() {
+export default function EditarPerfil({ onBack }) {
   const [imagemPerfil, setImagemPerfil] = useState(
     require('../../assets/WhatsApp Image 2026-08-25 at 11.25.57 2.png')
   );
@@ -47,7 +47,7 @@ export default function EditarPerfil() {
         <View style={styles.card}>
           {/* Seta de Voltar e Título */}
           <View style={styles.header}>
-            <TouchableOpacity style={styles.backButton}>
+            <TouchableOpacity style={styles.backButton} onPress={onBack} activeOpacity={0.7}>
               <Image
                 source={require('../../assets/incon_seta-esquerda.png')}
                 style={styles.backIcon}
