@@ -61,7 +61,15 @@ import {
       );
     }
 
-    export default function Feed({ telaAtiva = "Feed", aoMudarTela }) {
+    export default function Feed({ telaAtiva = "Feed", aoMudarTela, aoAbrirPost }) {
+      const abrirDetalhesDoPost = (post) => {
+        if (aoAbrirPost) {
+          aoAbrirPost(post);
+        } else if (aoMudarTela) {
+          aoMudarTela("detalhes", post);
+        }
+      };
+
       return (
         <LinearGradient colors={['#211645', '#181122']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{flex: 1, width: '100%', height: '100%',}}>
         
@@ -110,11 +118,16 @@ import {
 
                 <Text style={Feedstyles.PostText}>{post.text}</Text>
 
-                {post.image ? (
-                  <Image source={post.image} style={Feedstyles.PostImage} resizeMode="cover" />
-                ) : (
-                  <Artwork accent={post.accent} />
-                )}
+                <TouchableOpacity
+                  activeOpacity={0.9}
+                  onPress={() => abrirDetalhesDoPost(post)}
+                >
+                  {post.image ? (
+                    <Image source={post.image} style={Feedstyles.PostImage} resizeMode="cover" />
+                  ) : (
+                    <Artwork accent={post.accent} />
+                  )}
+                </TouchableOpacity>
 
                 <View style={Feedstyles.ActionsRow}>
                   <View style={Feedstyles.ActionItem}>
@@ -138,7 +151,10 @@ import {
                   </View>
 
                   <View style={Feedstyles.ActionItemShare}>
-                    <TouchableOpacity activeOpacity={0.7}>
+                    <TouchableOpacity
+                      activeOpacity={0.7}
+                      onPress={() => abrirDetalhesDoPost(post)}
+                    >
                       <Text style={Feedstyles.ActionIconShare}>Ver mais</Text>
                     </TouchableOpacity>
                   </View>
