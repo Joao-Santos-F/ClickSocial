@@ -38,7 +38,7 @@ const styles = StyleSheet.create({
     paddingTop: theme.spacing.sm,
   },
   cardComentario: {
-    backgroundColor: theme.colors.inputBackground,
+    backgroundColor: theme.colors.cardBackground,
     borderRadius: theme.borderRadius.medium,
     padding: theme.spacing.md,
     marginBottom: theme.spacing.sm,

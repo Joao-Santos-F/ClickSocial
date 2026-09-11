@@ -51,7 +51,7 @@ export function GradePublicacoes() {
           onPress={() => lidarComToquePost(post.id)}
         >
           <View style={styles.conteudoPost}>
-            <MascoteVerde tamanho="100%" />
+            <MascoteVerde tamanho={ITEM_WIDTH} />
           </View>
           {/* Badge de feedback visual com curtidas */}
           <View style={styles.badgeCurtidas}>
@@ -72,15 +72,16 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
-    padding: 10,
-    backgroundColor: theme.colors.cardBackground,
+    paddingHorizontal: ESPACAMENTO,
+    paddingTop: ESPACAMENTO,
+    backgroundColor: theme.colors.background,
   },
   itemPost: {
-    width: "48%",
-    aspectRatio: 1,
+    width: ITEM_WIDTH,
+    height: ITEM_WIDTH,
     borderRadius: 8,
     overflow: "hidden",
-    marginBottom: 10,
+    marginBottom: ESPACAMENTO,
     backgroundColor: "#0D0914",
     position: "relative",
   },

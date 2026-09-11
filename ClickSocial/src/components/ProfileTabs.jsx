@@ -60,6 +60,9 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.cardBackground,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.dividerLine,
+    marginTop: theme.spacing.sm,
+    marginHorizontal: theme.spacing.sm,
+    borderRadius: theme.borderRadius.small,
   },
   abaItem: {
     flex: 1,
