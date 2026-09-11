@@ -38,23 +38,36 @@ export const ITENS_NAV_PADRAO = [
  * @param {function} aoMudarTela - Callback acionado ao tocar em um item (recebe o id da tela)
  * @param {Array} itens - Lista personalizada de itens (opcional, usa ITENS_NAV_PADRAO por padrão)
  */
-export default function NavegacaoInferior({
-  telaAtiva = "Feed",
+export function NavegacaoInferior({
+  telaAtiva,
+  abaAtiva,
   aoMudarTela,
+  aoSelecionarAba,
   itens = ITENS_NAV_PADRAO,
 }) {
+  const ativaAtual = (telaAtiva || abaAtiva || "Feed").toLowerCase();
+  const callback = aoMudarTela || aoSelecionarAba;
+
   const lidarComToque = (id) => {
-    if (aoMudarTela) {
-      aoMudarTela(id);
+    if (callback) {
+      callback(id);
     } else {
       Alert.alert("Navegação", `Item selecionado: ${id.toUpperCase()}`);
     }
   };
 
+  const checarSeAtivo = (itemId) => {
+    const idMinusculo = itemId.toLowerCase();
+    if (idMinusculo === "feed" || idMinusculo === "inicio") {
+      return ativaAtual === "feed" || ativaAtual === "inicio";
+    }
+    return ativaAtual === idMinusculo;
+  };
+
   return (
     <View style={styles.container}>
       {itens.map((item) => {
-        const ativo = item.id === telaAtiva;
+        const ativo = checarSeAtivo(item.id);
         const cor = ativo ? theme.colors.textPrimary : theme.colors.textSecondary;
         const Icone = item.Componente;
 
@@ -75,6 +88,8 @@ export default function NavegacaoInferior({
     </View>
   );
 }
+
+export default NavegacaoInferior;
 
 const styles = StyleSheet.create({
   container: {

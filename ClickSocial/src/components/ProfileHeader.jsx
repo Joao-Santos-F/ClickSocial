@@ -23,16 +23,24 @@ const DESTAQUES = [
   { id: "5", rotulo: "Highlights 5" },
 ];
 
-export function ProfileHeader() {
+export function ProfileHeader({ onEditPress, onVoltarPress }) {
   const [bio, setBio] = useState("");
   const [estaEditando, setEstaEditando] = useState(false);
 
   const lidarComVoltar = () => {
-    Alert.alert("Navegação", "Retornar para a tela anterior.");
+    if (onVoltarPress) {
+      onVoltarPress();
+    } else {
+      Alert.alert("Navegação", "Retornar para a tela anterior.");
+    }
   };
 
   const lidarComEditar = () => {
-    setEstaEditando(!estaEditando);
+    if (onEditPress) {
+      onEditPress();
+    } else {
+      setEstaEditando(!estaEditando);
+    }
   };
 
   const lidarComArquivados = () => {
