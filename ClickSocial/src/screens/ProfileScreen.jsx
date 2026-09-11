@@ -20,6 +20,7 @@ export default function ProfileScreen({
   aoMudarTela,
   onEditar,
   onVoltar,
+  dadosPerfil,
 }) {
   const [abaAtiva, setAbaAtiva] = useState(0);
 
@@ -38,7 +39,11 @@ export default function ProfileScreen({
         showsVerticalScrollIndicator={false}
       >
         {/* Cabeçalho do Perfil com Bio digitável e interações */}
-        <ProfileHeader onEditPress={lidarComEditar} onVoltarPress={lidarComVoltar} />
+        <ProfileHeader
+          onEditPress={lidarComEditar}
+          onVoltarPress={lidarComVoltar}
+          dadosPerfil={dadosPerfil}
+        />
 
         {/* Abas de navegação de conteúdo */}
         <ProfileTabs abaAtiva={abaAtiva} aoMudarAba={setAbaAtiva} />

@@ -23,9 +23,15 @@ const DESTAQUES = [
   { id: "5", rotulo: "Highlights 5" },
 ];
 
-export function ProfileHeader({ onEditPress, onVoltarPress }) {
-  const [bio, setBio] = useState("");
+export function ProfileHeader({ onEditPress, onVoltarPress, dadosPerfil }) {
+  const [bio, setBio] = useState(dadosPerfil?.bio || "");
   const [estaEditando, setEstaEditando] = useState(false);
+
+  React.useEffect(() => {
+    if (dadosPerfil?.bio !== undefined) {
+      setBio(dadosPerfil.bio);
+    }
+  }, [dadosPerfil?.bio]);
 
   const lidarComVoltar = () => {
     if (onVoltarPress) {
@@ -71,7 +77,9 @@ export function ProfileHeader({ onEditPress, onVoltarPress }) {
         {/* Informações: Nome + Badge + Estatísticas */}
         <View style={styles.infoContainer}>
           <View style={styles.linhaNome}>
-            <Text style={styles.nomeTexto}>Arthurbr-YT</Text>
+            <Text style={styles.nomeTexto}>
+              {dadosPerfil?.nome || dadosPerfil?.usuario || "Arthurbr-YT"}
+            </Text>
             <View style={styles.badgeContainer}>
               <IconeVerificado tamanho={18} cor="#110D20" />
             </View>

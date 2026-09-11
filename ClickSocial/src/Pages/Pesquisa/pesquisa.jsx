@@ -46,7 +46,7 @@ function FaceCard({ image }) {
   );
 }
 
-export default function Pesquisa({ telaAtiva = "Feed", aoMudarTela }) {
+export default function Pesquisa({ telaAtiva = "pesquisa", aoMudarTela }) {
   const [searchText, setSearchText] = useState('');
 
   return (
@@ -54,7 +54,7 @@ export default function Pesquisa({ telaAtiva = "Feed", aoMudarTela }) {
 
     <View style={PesquisaStyles.container}>
       <View style={PesquisaStyles.headerBar}>
-        <TouchableOpacity onPress={() => aoMudarTela && aoMudarTela("Feed")} activeOpacity={0.7}>
+        <TouchableOpacity onPress={() => aoMudarTela && aoMudarTela("feed")} activeOpacity={0.7}>
           <Text style={PesquisaStyles.title}>Click Social</Text>
         </TouchableOpacity>
         <View style={PesquisaStyles.titleIconWrap}>

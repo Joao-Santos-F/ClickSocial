@@ -16,35 +16,60 @@ export default function App() {
   const [postSelecionado, setPostSelecionado] = useState(null);
   const [dadosPerfil, setDadosPerfil] = useState(null);
 
-  // Roteador local incremental para autenticação, feed, pesquisa, criar post, detalhes, perfil, comentários e notificações
+  // Roteador local incremental e canônico para todas as telas integradas
   const lidarNavegacaoApp = (id, post) => {
     const destino = (id || "").toLowerCase();
-    if (destino === "pesquisa") {
-      setTelaAtual("pesquisa");
-    } else if (destino === "feed" || destino === "inicio") {
-      setTelaAtual("feed");
-    } else if (destino === "criar" || destino === "criarpost") {
-      setTelaAtual("criarPost");
-    } else if (destino === "detalhes" || destino === "detalhepost") {
-      setPostSelecionado(post || null);
-      setTelaAtual("detalhes");
-    } else if (destino === "comentarios" || destino === "comentario") {
-      setTelaAtual("comentarios");
-    } else if (destino === "notificacao" || destino === "notificacoes") {
-      setTelaAtual("notificacao");
-    } else if (destino === "perfil") {
-      setTelaAtual("perfil");
-    } else if (destino === "editarperfil" || destino === "editar") {
-      setTelaAtual("editarPerfil");
-    } else if (destino === "sair" || destino === "login") {
-      setTelaAtual("login");
+    switch (destino) {
+      case "feed":
+      case "inicio":
+        setTelaAtual("feed");
+        break;
+      case "pesquisa":
+        setTelaAtual("pesquisa");
+        break;
+      case "criar":
+      case "criarpost":
+        setTelaAtual("criarPost");
+        break;
+      case "detalhes":
+      case "detalhepost":
+        setPostSelecionado(post || null);
+        setTelaAtual("detalhes");
+        break;
+      case "comentarios":
+      case "comentario":
+        setTelaAtual("comentarios");
+        break;
+      case "notificacao":
+      case "notificacoes":
+        setTelaAtual("notificacao");
+        break;
+      case "perfil":
+        setTelaAtual("perfil");
+        break;
+      case "editarperfil":
+      case "editar":
+        setTelaAtual("editarPerfil");
+        break;
+      case "login":
+      case "sair":
+        setTelaAtual("login");
+        break;
+      case "cadastro":
+        setTelaAtual("cadastro");
+        break;
+      case "boasvindas":
+        setTelaAtual("boasVindas");
+        break;
+      default:
+        break;
     }
   };
 
   if (telaAtual === "feed") {
     return (
       <Feed
-        telaAtiva="Feed"
+        telaAtiva="feed"
         aoMudarTela={lidarNavegacaoApp}
         aoAbrirPost={(post) => lidarNavegacaoApp("detalhes", post)}
       />
@@ -52,7 +77,7 @@ export default function App() {
   }
 
   if (telaAtual === "pesquisa") {
-    return <Pesquisa telaAtiva="Feed" aoMudarTela={lidarNavegacaoApp} />;
+    return <Pesquisa telaAtiva="pesquisa" aoMudarTela={lidarNavegacaoApp} />;
   }
 
   if (telaAtual === "criarPost") {
@@ -98,6 +123,7 @@ export default function App() {
     return (
       <ProfileScreen
         telaAtiva="perfil"
+        dadosPerfil={dadosPerfil}
         aoMudarTela={lidarNavegacaoApp}
         onEditar={() => setTelaAtual("editarPerfil")}
         onVoltar={() => setTelaAtual("feed")}

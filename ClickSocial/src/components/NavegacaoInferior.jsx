@@ -10,7 +10,7 @@ import {
 
 export const ITENS_NAV_PADRAO = [
   {
-    id: "Feed",
+    id: "feed",
     rotulo: "Início",
     Componente: IconeNavInicio,
   },

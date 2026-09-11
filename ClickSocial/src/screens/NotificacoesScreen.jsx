@@ -9,7 +9,6 @@ import {
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { LinearGradient } from "expo-linear-gradient";
-import { Ionicons } from "@expo/vector-icons";
 import { theme } from "../styles/theme";
 import NavegacaoInferior from "../components/NavegacaoInferior";
 
@@ -85,7 +84,7 @@ export default function NotificacoesScreen({
           />
         );
       default:
-        return <Ionicons name="notifications" size={28} color={theme.colors.textPrimary} />;
+        return null;
     }
   };
 
