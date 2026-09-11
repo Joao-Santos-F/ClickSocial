@@ -1,6 +1,7 @@
 export const theme = {
   colors: {
     background: "#130C25",     // Fundo escuro roxo/azul marinho da tela
+    backgroundGradient: ["#23163E", "#150D29", "#0B0616"], // Gradiente escuro roxo/marinho
     cardBackground: "#F4F3F8", // Fundo do card centralizado
     textPrimary: "#1B172B",    // Texto escuro principal (Títulos e labels)
     textSecondary: "#6E6A82",  // Texto secundário (Divisor, placeholders)

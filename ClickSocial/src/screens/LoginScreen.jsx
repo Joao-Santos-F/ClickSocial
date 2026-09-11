@@ -9,6 +9,7 @@ import {
   Alert,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
+import { LinearGradient } from "expo-linear-gradient";
 import { theme } from "../styles/theme";
 
 // Componentes modulares em PT-BR
@@ -49,17 +50,21 @@ export default function LoginScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
+    <LinearGradient
+      colors={theme.colors.backgroundGradient}
       style={styles.containerFundo}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <StatusBar style="light" />
-      <ScrollView
-        contentContainerStyle={styles.conteudoRolagem}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
+      <KeyboardAvoidingView
+        style={styles.tecladoContainer}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        <View style={styles.cartao}>
+        <StatusBar style="light" />
+        <ScrollView
+          contentContainerStyle={styles.conteudoRolagem}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.cartao}>
           {/* Ícone Superior */}
           <IconeCabecalho tamanho={60} />
 
@@ -106,13 +111,16 @@ export default function LoginScreen() {
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   containerFundo: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+  },
+  tecladoContainer: {
+    flex: 1,
   },
   conteudoRolagem: {
     flexGrow: 1,
