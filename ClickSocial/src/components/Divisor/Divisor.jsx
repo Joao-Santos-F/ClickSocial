@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { theme } from "../styles/theme";
+import { theme } from "../../styles/theme";
 
 export function Divisor({ texto = "ou" }) {
   return (
@@ -31,3 +31,5 @@ const styles = StyleSheet.create({
     color: theme.colors.textSecondary,
   },
 });
+
+export default Divisor;

@@ -1,6 +1,6 @@
 import React from "react";
 import { TouchableOpacity, Text, StyleSheet, ActivityIndicator } from "react-native";
-import { theme } from "../styles/theme";
+import { theme } from "../../styles/theme";
 
 export function BotaoPrincipal({ titulo, aoPressionar, desabilitado = false, carregando = false }) {
   return (
@@ -39,3 +39,5 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
 });
+
+export default BotaoPrincipal;

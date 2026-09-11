@@ -1,7 +1,7 @@
 import React from "react";
 import { TouchableOpacity, Text, StyleSheet, View } from "react-native";
 import Svg, { Path } from "react-native-svg";
-import { theme } from "../styles/theme";
+import { theme } from "../../styles/theme";
 
 function IconeGoogle({ tamanho = 20 }) {
   return (
@@ -69,3 +69,5 @@ const styles = StyleSheet.create({
     color: theme.colors.textPrimary,
   },
 });
+
+export default BotaoGoogle;

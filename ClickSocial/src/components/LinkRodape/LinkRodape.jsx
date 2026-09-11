@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import { theme } from "../styles/theme";
+import { theme } from "../../styles/theme";
 
 export function LinkRodape({
   textoPergunta = "Não tem uma conta?",
@@ -36,3 +36,5 @@ const styles = StyleSheet.create({
     textDecorationLine: "underline",
   },
 });
+
+export default LinkRodape;

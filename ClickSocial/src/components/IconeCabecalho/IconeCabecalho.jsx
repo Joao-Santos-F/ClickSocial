@@ -1,7 +1,7 @@
 import React from "react";
 import { View, StyleSheet } from "react-native";
 import Svg, { Path, Circle } from "react-native-svg";
-import { theme } from "../styles/theme";
+import { theme } from "../../styles/theme";
 
 export function IconeCabecalho({ tamanho = 64, cor = theme.colors.iconPrimary }) {
   return (
@@ -30,3 +30,5 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.sm,
   },
 });
+
+export default IconeCabecalho;
