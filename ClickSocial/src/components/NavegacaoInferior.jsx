@@ -77,6 +77,9 @@ export function NavegacaoInferior({
             style={styles.itemNav}
             activeOpacity={0.7}
             onPress={() => lidarComToque(item.id)}
+            accessibilityRole="tab"
+            accessibilityLabel={item.rotulo}
+            accessibilityState={{ selected: ativo }}
           >
             <Icone tamanho={24} cor={cor} />
             <Text style={[styles.rotuloNav, ativo && styles.rotuloNavAtivo]}>

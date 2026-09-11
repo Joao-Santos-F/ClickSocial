@@ -110,6 +110,8 @@ export function ProfileHeader({ onEditPress, onVoltarPress, dadosPerfil }) {
           style={styles.botaoVoltar}
           activeOpacity={0.6}
           onPress={lidarComVoltar}
+          accessibilityRole="button"
+          accessibilityLabel="Voltar ao início"
         >
           <IconeSetaVoltar tamanho={22} cor={theme.colors.textPrimary} />
         </TouchableOpacity>

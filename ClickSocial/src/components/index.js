@@ -15,7 +15,6 @@ export { SecaoComentarios } from "./SecaoComentarios";
 
 // Componentes de Navegação
 export { NavegacaoInferior, ITENS_NAV_PADRAO } from "./NavegacaoInferior";
-export { BarraNavegacao } from "./BarraNavegacao/BarraNavegacao";
 
 // Biblioteca de Ícones Vetoriais SVG
 export * from "./IconesSvg";
