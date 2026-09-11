@@ -23,16 +23,30 @@ const DESTAQUES = [
   { id: "5", rotulo: "Highlights 5" },
 ];
 
-export function ProfileHeader() {
-  const [bio, setBio] = useState("");
+export function ProfileHeader({ onEditPress, onVoltarPress, dadosPerfil }) {
+  const [bio, setBio] = useState(dadosPerfil?.bio || "");
   const [estaEditando, setEstaEditando] = useState(false);
 
+  React.useEffect(() => {
+    if (dadosPerfil?.bio !== undefined) {
+      setBio(dadosPerfil.bio);
+    }
+  }, [dadosPerfil?.bio]);
+
   const lidarComVoltar = () => {
-    Alert.alert("Navegação", "Retornar para a tela anterior.");
+    if (onVoltarPress) {
+      onVoltarPress();
+    } else {
+      Alert.alert("Navegação", "Retornar para a tela anterior.");
+    }
   };
 
   const lidarComEditar = () => {
-    setEstaEditando(!estaEditando);
+    if (onEditPress) {
+      onEditPress();
+    } else {
+      setEstaEditando(!estaEditando);
+    }
   };
 
   const lidarComArquivados = () => {
@@ -63,7 +77,9 @@ export function ProfileHeader() {
         {/* Informações: Nome + Badge + Estatísticas */}
         <View style={styles.infoContainer}>
           <View style={styles.linhaNome}>
-            <Text style={styles.nomeTexto}>Arthurbr-YT</Text>
+            <Text style={styles.nomeTexto}>
+              {dadosPerfil?.nome || dadosPerfil?.usuario || "Arthurbr-YT"}
+            </Text>
             <View style={styles.badgeContainer}>
               <IconeVerificado tamanho={18} cor="#110D20" />
             </View>
@@ -94,6 +110,8 @@ export function ProfileHeader() {
           style={styles.botaoVoltar}
           activeOpacity={0.6}
           onPress={lidarComVoltar}
+          accessibilityRole="button"
+          accessibilityLabel="Voltar ao início"
         >
           <IconeSetaVoltar tamanho={22} cor={theme.colors.textPrimary} />
         </TouchableOpacity>

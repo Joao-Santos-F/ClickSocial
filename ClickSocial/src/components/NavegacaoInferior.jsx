@@ -10,7 +10,7 @@ import {
 
 export const ITENS_NAV_PADRAO = [
   {
-    id: "inicio",
+    id: "feed",
     rotulo: "Início",
     Componente: IconeNavInicio,
   },
@@ -39,22 +39,35 @@ export const ITENS_NAV_PADRAO = [
  * @param {Array} itens - Lista personalizada de itens (opcional, usa ITENS_NAV_PADRAO por padrão)
  */
 export function NavegacaoInferior({
-  telaAtiva = "perfil",
+  telaAtiva,
+  abaAtiva,
   aoMudarTela,
+  aoSelecionarAba,
   itens = ITENS_NAV_PADRAO,
 }) {
+  const ativaAtual = (telaAtiva || abaAtiva || "Feed").toLowerCase();
+  const callback = aoMudarTela || aoSelecionarAba;
+
   const lidarComToque = (id) => {
-    if (aoMudarTela) {
-      aoMudarTela(id);
+    if (callback) {
+      callback(id);
     } else {
       Alert.alert("Navegação", `Item selecionado: ${id.toUpperCase()}`);
     }
   };
 
+  const checarSeAtivo = (itemId) => {
+    const idMinusculo = itemId.toLowerCase();
+    if (idMinusculo === "feed" || idMinusculo === "inicio") {
+      return ativaAtual === "feed" || ativaAtual === "inicio";
+    }
+    return ativaAtual === idMinusculo;
+  };
+
   return (
     <View style={styles.container}>
       {itens.map((item) => {
-        const ativo = item.id === telaAtiva;
+        const ativo = checarSeAtivo(item.id);
         const cor = ativo ? theme.colors.textPrimary : theme.colors.textSecondary;
         const Icone = item.Componente;
 
@@ -64,6 +77,9 @@ export function NavegacaoInferior({
             style={styles.itemNav}
             activeOpacity={0.7}
             onPress={() => lidarComToque(item.id)}
+            accessibilityRole="tab"
+            accessibilityLabel={item.rotulo}
+            accessibilityState={{ selected: ativo }}
           >
             <Icone tamanho={24} cor={cor} />
             <Text style={[styles.rotuloNav, ativo && styles.rotuloNavAtivo]}>
@@ -75,6 +91,8 @@ export function NavegacaoInferior({
     </View>
   );
 }
+
+export default NavegacaoInferior;
 
 const styles = StyleSheet.create({
   container: {

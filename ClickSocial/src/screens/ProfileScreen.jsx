@@ -14,10 +14,19 @@ import { ProfileHeader } from "../components/ProfileHeader";
 import { ProfileTabs } from "../components/ProfileTabs";
 import { GradePublicacoes } from "../components/GradePublicacoes";
 import { SecaoComentarios } from "../components/SecaoComentarios";
-import { NavegacaoInferior } from "../components/NavegacaoInferior";
+import NavegacaoInferior from "../components/NavegacaoInferior";
 
-export default function ProfileScreen() {
+export default function ProfileScreen({
+  telaAtiva = "perfil",
+  aoMudarTela,
+  onEditar,
+  onVoltar,
+  dadosPerfil,
+}) {
   const [abaAtiva, setAbaAtiva] = useState(0);
+
+  const lidarComEditar = onEditar || (() => aoMudarTela && aoMudarTela("editarPerfil"));
+  const lidarComVoltar = onVoltar || (() => aoMudarTela && aoMudarTela("feed"));
 
   return (
     <LinearGradient
@@ -35,10 +44,18 @@ export default function ProfileScreen() {
           {/* Cabeçalho do Perfil com Bio digitável e interações */}
           <ProfileHeader />
 
-          {/* Cartão de Conteúdo (Abas + Grade/Comentários) */}
-          <View style={styles.cartaoConteudo}>
-            {/* Abas de navegação de conteúdo */}
-            <ProfileTabs abaAtiva={abaAtiva} aoMudarAba={setAbaAtiva} />
+      {/* Conteúdo com scroll e margem superior ajustada para StatusBar */}
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.conteudoScroll}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Cabeçalho do Perfil com Bio digitável e interações */}
+        <ProfileHeader
+          onEditPress={lidarComEditar}
+          onVoltarPress={lidarComVoltar}
+          dadosPerfil={dadosPerfil}
+        />
 
             {/* Conteúdo dinâmico das Abas */}
             {abaAtiva === 0 && <GradePublicacoes />}
@@ -48,10 +65,16 @@ export default function ProfileScreen() {
           </View>
         </ScrollView>
 
-        {/* Footer fixo na parte inferior */}
-        <NavegacaoInferior />
-      </SafeAreaView>
-    </LinearGradient>
+        {/* Conteúdo dinâmico das Abas */}
+        {abaAtiva === 0 && <GradePublicacoes />}
+        {abaAtiva === 1 && <SecaoComentarios />}
+        {abaAtiva === 2 && <GradePublicacoes />}
+        {abaAtiva === 3 && <SecaoComentarios />}
+      </ScrollView>
+
+      {/* Footer fixo na parte inferior */}
+      <NavegacaoInferior telaAtiva={telaAtiva} aoMudarTela={aoMudarTela} />
+    </SafeAreaView>
   );
 }
 
