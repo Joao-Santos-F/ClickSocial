@@ -21,13 +21,21 @@ import {
   LinkRodape,
 } from "../components";
 
-export default function CadastroScreen({ aoNavegarLogin }) {
+export default function CadastroScreen({
+  aoNavegarLogin,
+  aoNavegarBoasVindas,
+  onLogin,
+  onVoltar,
+}) {
   const [nomeCompleto, setNomeCompleto] = useState("");
   const [nomeUsuario, setNomeUsuario] = useState("");
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [fotoUri, setFotoUri] = useState(null);
   const [carregando, setCarregando] = useState(false);
+
+  const lidarNavegarLogin = aoNavegarLogin || onLogin;
+  const lidarVoltar = aoNavegarBoasVindas || onVoltar || lidarNavegarLogin;
 
   const lidarComCadastro = () => {
     if (!nomeCompleto || !nomeUsuario || !email || !senha) {
@@ -42,7 +50,7 @@ export default function CadastroScreen({ aoNavegarLogin }) {
     setTimeout(() => {
       setCarregando(false);
       Alert.alert("Sucesso", "Conta criada com sucesso!", [
-        { text: "OK", onPress: () => aoNavegarLogin && aoNavegarLogin() },
+        { text: "OK", onPress: () => lidarNavegarLogin && lidarNavegarLogin() },
       ]);
     }, 1200);
   };
@@ -63,7 +71,13 @@ export default function CadastroScreen({ aoNavegarLogin }) {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.cartao}>
-            <IconeCabecalho tamanho={60} />
+            <TouchableOpacity
+              onPress={lidarVoltar}
+              disabled={!lidarVoltar}
+              activeOpacity={0.7}
+            >
+              <IconeCabecalho tamanho={60} />
+            </TouchableOpacity>
 
             <Text style={styles.titulo}>Cadastro</Text>
 
@@ -119,7 +133,7 @@ export default function CadastroScreen({ aoNavegarLogin }) {
             <LinkRodape
               textoPergunta="Tem uma conta?"
               textoAcao="Faça Login"
-              aoPressionarAcao={aoNavegarLogin}
+              aoPressionarAcao={lidarNavegarLogin}
             />
           </View>
         </ScrollView>

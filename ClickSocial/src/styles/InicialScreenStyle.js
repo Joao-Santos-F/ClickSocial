@@ -1,0 +1,76 @@
+import { StyleSheet } from "react-native";
+
+export const InicialScreenStyle = StyleSheet.create({
+    Container: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: '#4C3B5A',
+    },
+    card_central: {
+        width: '85%',
+        backgroundColor: '#FFFFFF',
+        borderRadius: 24,
+        paddingVertical: 40,
+        paddingHorizontal: 24,
+        alignItems: 'center',
+        justifyContent: 'center',
+        shadowColor: "#000",
+        shadowOffset: {
+            width: 0,
+            height: 4,
+        },
+        shadowOpacity: 0.15,
+        shadowRadius: 10,
+        elevation: 5,
+    },
+    logo_icon: {
+        width: 80,
+        height: 80,
+        resizeMode: 'contain',
+        marginBottom: 16,
+    },
+    title: {
+        fontSize: 32,
+        fontWeight: '700',
+        color: '#000000',
+        marginBottom: 12,
+        textAlign: 'center',
+    },
+    subtitle: {
+        fontSize: 14,
+        color: '#555555',
+        textAlign: 'center',
+        lineHeight: 20,
+        marginBottom: 40,
+    },
+    btn_entrar: {
+        width: '100%',
+        height: 48,
+        backgroundColor: '#3B2F4A', 
+        borderRadius: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 16,
+    },
+    text_btn_entrar: {
+        color: '#FFFFFF',
+        fontSize: 16,
+        fontWeight: '700',
+    },
+    btn_criar_conta: {
+        width: '100%',
+        height: 48,
+        backgroundColor: '#F5F5FA', 
+        borderRadius: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 1,
+        borderColor: '#EBEBEF',
+    },
+    text_btn_criar_conta: {
+        color: '#000000',
+        fontSize: 16,
+        fontWeight: '700',
+    },
+});

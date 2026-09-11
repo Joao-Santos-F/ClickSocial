@@ -21,10 +21,19 @@ import {
   LinkRodape,
 } from "../components";
 
-export default function LoginScreen({ aoNavegarCadastro }) {
+export default function LoginScreen({
+  aoNavegarCadastro,
+  aoNavegarBoasVindas,
+  onCadastro,
+  onVoltar,
+  aoFazerLogin,
+}) {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [carregando, setCarregando] = useState(false);
+
+  const lidarNavegarCadastro = aoNavegarCadastro || onCadastro;
+  const lidarVoltar = aoNavegarBoasVindas || onVoltar;
 
   const lidarComLogin = () => {
     if (!email || !senha) {
@@ -35,7 +44,9 @@ export default function LoginScreen({ aoNavegarCadastro }) {
     setCarregando(true);
     setTimeout(() => {
       setCarregando(false);
-      Alert.alert("Sucesso", `Login efetuado com o e-mail: ${email}`);
+      Alert.alert("Sucesso", `Login efetuado com o e-mail: ${email}`, [
+        { text: "OK", onPress: () => aoFazerLogin && aoFazerLogin() },
+      ]);
     }, 1200);
   };
 
@@ -59,7 +70,13 @@ export default function LoginScreen({ aoNavegarCadastro }) {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.cartao}>
-            <IconeCabecalho tamanho={60} />
+            <TouchableOpacity
+              onPress={lidarVoltar}
+              disabled={!lidarVoltar}
+              activeOpacity={0.7}
+            >
+              <IconeCabecalho tamanho={60} />
+            </TouchableOpacity>
 
             <Text style={styles.titulo}>Login</Text>
 
@@ -93,7 +110,7 @@ export default function LoginScreen({ aoNavegarCadastro }) {
             <LinkRodape
               textoPergunta="Não tem uma conta?"
               textoAcao="Cadastra-se"
-              aoPressionarAcao={aoNavegarCadastro}
+              aoPressionarAcao={lidarNavegarCadastro}
             />
           </View>
         </ScrollView>
