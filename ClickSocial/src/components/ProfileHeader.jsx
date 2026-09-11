@@ -23,16 +23,19 @@ const DESTAQUES = [
   { id: "5", rotulo: "Highlights 5" },
 ];
 
-export function ProfileHeader() {
-  const [bio, setBio] = useState("");
-  const [estaEditando, setEstaEditando] = useState(false);
-
+export function ProfileHeader({ onEditPress, onVoltarPress, dadosPerfil }) {
   const lidarComVoltar = () => {
-    Alert.alert("Navegação", "Retornar para a tela anterior.");
+    if (onVoltarPress) {
+      onVoltarPress();
+    } else {
+      Alert.alert("Navegação", "Retornar para a tela anterior.");
+    }
   };
 
   const lidarComEditar = () => {
-    setEstaEditando(!estaEditando);
+    if (onEditPress) {
+      onEditPress();
+    }
   };
 
   const lidarComArquivados = () => {
@@ -63,7 +66,9 @@ export function ProfileHeader() {
         {/* Informações: Nome + Badge + Estatísticas */}
         <View style={styles.infoContainer}>
           <View style={styles.linhaNome}>
-            <Text style={styles.nomeTexto}>Arthurbr-YT</Text>
+            <Text style={styles.nomeTexto}>
+              {dadosPerfil?.nome || dadosPerfil?.usuario || "Arthurbr-YT"}
+            </Text>
             <View style={styles.badgeContainer}>
               <IconeVerificado tamanho={18} cor="#110D20" />
             </View>
@@ -94,35 +99,28 @@ export function ProfileHeader() {
           style={styles.botaoVoltar}
           activeOpacity={0.6}
           onPress={lidarComVoltar}
+          accessibilityRole="button"
+          accessibilityLabel="Voltar ao início"
         >
           <IconeSetaVoltar tamanho={22} cor={theme.colors.textPrimary} />
         </TouchableOpacity>
       </View>
 
-      {/* Caixa de Bio / Descrição Digitável */}
+      {/* Caixa de Bio Estática */}
       <View style={styles.bioContainer}>
-        <TextInput
-          style={styles.bioInput}
-          placeholder="Escreva sua bio aqui..."
-          placeholderTextColor={theme.colors.inputPlaceholder}
-          value={bio}
-          onChangeText={setBio}
-          maxLength={100}
-          autoCapitalize="sentences"
-          autoCorrect={false}
-        />
+        <Text style={styles.bioInput} numberOfLines={2} ellipsizeMode="tail">
+          {dadosPerfil?.bio || "Criador de conteúdo e explorador de ideias."}
+        </Text>
       </View>
 
       {/* Botões de Ação: Editar e Arquivados */}
       <View style={styles.botoesContainer}>
         <TouchableOpacity
-          style={[styles.botaoAcao, estaEditando && styles.botaoAcaoAtivo]}
+          style={styles.botaoAcao}
           activeOpacity={0.7}
           onPress={lidarComEditar}
         >
-          <Text style={[styles.botaoAcaoTexto, estaEditando && styles.botaoAcaoTextoAtivo]}>
-            {estaEditando ? "Concluir" : "Editar"}
-          </Text>
+          <Text style={styles.botaoAcaoTexto}>Editar</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.botaoAcao}

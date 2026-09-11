@@ -8,20 +8,30 @@ import {
   Image,
   ScrollView,
   SafeAreaView,
+  Alert,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
 
-export default function EditarPerfil() {
+export default function EditarPerfil({ perfil, onVoltar, onSalvar }) {
+  const [nome, setNome] = useState(perfil?.nome || 'Arthur Batista');
+  const [usuario, setUsuario] = useState(perfil?.usuario || 'Arthurbr-YT');
+  const [bio, setBio] = useState(
+    perfil?.bio || 'Criador de conteúdo e explorador de ideias.'
+  );
   const [imagemPerfil, setImagemPerfil] = useState(
-    require('../../assets/WhatsApp Image 2026-08-25 at 11.25.57 2.png')
+    perfil?.imagemPerfil ||
+      require('../../assets/WhatsApp Image 2026-08-25 at 11.25.57 2.png')
   );
 
   const selecionarImagem = async () => {
     try {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
-        alert('Precisamos de permissão para acessar sua galeria!');
+        Alert.alert(
+          'Permissão necessária',
+          'Precisamos de permissão para acessar sua galeria!'
+        );
         return;
       }
 
@@ -29,7 +39,7 @@ export default function EditarPerfil() {
         mediaTypes: ['images'],
         allowsEditing: true,
         aspect: [1, 1],
-        quality: 1,
+        quality: 0.8,
       });
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
@@ -37,95 +47,126 @@ export default function EditarPerfil() {
       }
     } catch (error) {
       console.log('Erro ao selecionar imagem:', error);
+      Alert.alert('Erro', 'Não foi possível selecionar a imagem.');
     }
+  };
+
+  const lidarSalvar = () => {
+    Alert.alert('Perfil atualizado', 'As alterações foram salvas com sucesso.', [
+      {
+        text: 'OK',
+        onPress: () => {
+          if (onSalvar) {
+            onSalvar({ nome, usuario, bio, imagemPerfil });
+          } else if (onVoltar) {
+            onVoltar();
+          }
+        },
+      },
+    ]);
   };
 
   return (
     <LinearGradient colors={['#211C52', '#211645', '#0D0914']} style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <View style={styles.card}>
-          {/* Seta de Voltar e Título */}
-          <View style={styles.header}>
-            <TouchableOpacity style={styles.backButton}>
-              <Image
-                source={require('../../assets/incon_seta-esquerda.png')}
-                style={styles.backIcon}
-                resizeMode="contain"
-              />
-            </TouchableOpacity>
-            <Text style={styles.title}>Editar Perfil</Text>
-          </View>
-
-          {/* Foto de Perfil */}
-          <View style={styles.profileContainer}>
-            <TouchableOpacity
-              style={styles.avatarWrapper}
-              onPress={selecionarImagem}
-              activeOpacity={0.8}
-            >
-              <Image
-                source={imagemPerfil}
-                style={styles.avatar}
-                resizeMode="cover"
-              />
-              <View style={styles.cameraBadge}>
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          <View style={styles.card}>
+            {/* Seta de Voltar e Título */}
+            <View style={styles.header}>
+              <TouchableOpacity
+                style={styles.backButton}
+                onPress={onVoltar}
+                activeOpacity={0.7}
+              >
                 <Image
-                  source={require('../../assets/incon_img.png')}
-                  style={styles.cameraIcon}
+                  source={require('../../assets/incon_seta-esquerda.png')}
+                  style={styles.backIcon}
                   resizeMode="contain"
                 />
-              </View>
+              </TouchableOpacity>
+              <Text style={styles.title}>Editar Perfil</Text>
+            </View>
+
+            {/* Foto de Perfil */}
+            <View style={styles.profileContainer}>
+              <TouchableOpacity
+                style={styles.avatarWrapper}
+                onPress={selecionarImagem}
+                activeOpacity={0.8}
+              >
+                <Image
+                  source={imagemPerfil}
+                  style={styles.avatar}
+                  resizeMode="cover"
+                />
+                <View style={styles.cameraBadge}>
+                  <Image
+                    source={require('../../assets/incon_img.png')}
+                    style={styles.cameraIcon}
+                    resizeMode="contain"
+                  />
+                </View>
+              </TouchableOpacity>
+            </View>
+
+            {/* Formulário */}
+            <View style={styles.formGroup}>
+              <Text style={styles.label}>Nome</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Digite seu nome"
+                placeholderTextColor="#999999"
+                value={nome}
+                onChangeText={setNome}
+              />
+            </View>
+
+            <View style={styles.formGroup}>
+              <Text style={styles.label}>Usuário</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Digite seu usuário"
+                placeholderTextColor="#999999"
+                value={usuario}
+                onChangeText={setUsuario}
+              />
+            </View>
+
+            <View style={styles.formGroup}>
+              <Text style={styles.label}>Bio (máx. 80 caracteres)</Text>
+              <TextInput
+                style={[styles.input, styles.textArea]}
+                placeholder="Digite algo para sua Bio"
+                placeholderTextColor="#999999"
+                multiline={true}
+                numberOfLines={4}
+                maxLength={80}
+                textAlignVertical="top"
+                value={bio}
+                onChangeText={setBio}
+              />
+            </View>
+
+            <View style={styles.formGroup}>
+              <Text style={styles.label}>Temas</Text>
+              <TouchableOpacity style={styles.selectInput} activeOpacity={0.8}>
+                <Text style={styles.selectText}>Selecione seu tema</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Botão Salvar */}
+            <TouchableOpacity
+              style={styles.saveButton}
+              activeOpacity={0.8}
+              onPress={lidarSalvar}
+            >
+              <Text style={styles.saveButtonText}>Salvar alterações</Text>
             </TouchableOpacity>
           </View>
-
-          {/* Formulário */}
-          <View style={styles.formGroup}>
-            <Text style={styles.label}>Nome</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Digite seu nome"
-              placeholderTextColor="#999999"
-            />
-          </View>
-
-          <View style={styles.formGroup}>
-            <Text style={styles.label}>Usuário</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Digite seu usuário"
-              placeholderTextColor="#999999"
-            />
-          </View>
-
-          <View style={styles.formGroup}>
-            <Text style={styles.label}>Bio</Text>
-            <TextInput
-              style={[styles.input, styles.textArea]}
-              placeholder="Digite algo para sua Bio"
-              placeholderTextColor="#999999"
-              multiline={true}
-              numberOfLines={4}
-              textAlignVertical="top"
-            />
-          </View>
-
-          <View style={styles.formGroup}>
-            <Text style={styles.label}>Temas</Text>
-            <TouchableOpacity style={styles.selectInput} activeOpacity={0.8}>
-              <Text style={styles.selectText}>Selecione seu tema</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Botão Salvar */}
-          <TouchableOpacity style={styles.saveButton} activeOpacity={0.8}>
-            <Text style={styles.saveButtonText}>Salvar alterações</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
-  </LinearGradient>
-);
+        </ScrollView>
+      </SafeAreaView>
+    </LinearGradient>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -229,7 +270,6 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     fontSize: 14,
     color: '#333333',
-    outlineStyle: 'none',
   },
   textArea: {
     height: 90,
