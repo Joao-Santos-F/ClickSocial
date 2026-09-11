@@ -9,13 +9,14 @@ import DetalhesPost from "./screens/clicksocial-DetalhesPost/DetalhePost.jsx";
 import ProfileScreen from "./screens/ProfileScreen";
 import EditarPerfil from "./screens/EditarPerfil";
 import Comentario from "./screens/Comentario";
+import NotificacoesScreen from "./screens/NotificacoesScreen";
 
 export default function App() {
   const [telaAtual, setTelaAtual] = useState("boasVindas");
   const [postSelecionado, setPostSelecionado] = useState(null);
   const [dadosPerfil, setDadosPerfil] = useState(null);
 
-  // Roteador local incremental para autenticação, feed, pesquisa, criar post, detalhes, perfil e comentários
+  // Roteador local incremental para autenticação, feed, pesquisa, criar post, detalhes, perfil, comentários e notificações
   const lidarNavegacaoApp = (id, post) => {
     const destino = (id || "").toLowerCase();
     if (destino === "pesquisa") {
@@ -29,6 +30,8 @@ export default function App() {
       setTelaAtual("detalhes");
     } else if (destino === "comentarios" || destino === "comentario") {
       setTelaAtual("comentarios");
+    } else if (destino === "notificacao" || destino === "notificacoes") {
+      setTelaAtual("notificacao");
     } else if (destino === "perfil") {
       setTelaAtual("perfil");
     } else if (destino === "editarperfil" || destino === "editar") {
@@ -77,6 +80,16 @@ export default function App() {
         post={postSelecionado}
         onVoltar={() => setTelaAtual("detalhes")}
         onBack={() => setTelaAtual("detalhes")}
+      />
+    );
+  }
+
+  if (telaAtual === "notificacao") {
+    return (
+      <NotificacoesScreen
+        telaAtiva="notificacao"
+        aoMudarTela={lidarNavegacaoApp}
+        aoNavegarAba={lidarNavegacaoApp}
       />
     );
   }
