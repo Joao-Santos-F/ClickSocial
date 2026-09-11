@@ -1,8 +1,15 @@
 import { ScrollView, Text, View, Image, TouchableOpacity } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Feedstyles } from "./feedStyle";
-import { ITENS_NAV_PADRAO } from "../../components/NavegacaoInferior";
-
+import NavegacaoInferior from "../../components/NavegacaoInferior";
+import {
+  IconeLogoFeed,
+  IconeBuscarFeed,
+  IconeMaisInformacoes,
+  IconeCoracaoFeed,
+  IconeMensagemFeed,
+  IconeFrameFeed,
+} from "../../components/IconesSvg";
 
     const posts = [
         {
@@ -54,7 +61,7 @@ import { ITENS_NAV_PADRAO } from "../../components/NavegacaoInferior";
       );
     }
 
-    export default function Feed() {
+    export default function Feed({ telaAtiva = "Feed", aoMudarTela }) {
       return (
         <LinearGradient colors={['#211645', '#181122']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{flex: 1, width: '100%', height: '100%',}}>
         
@@ -62,10 +69,16 @@ import { ITENS_NAV_PADRAO } from "../../components/NavegacaoInferior";
           <View style={Feedstyles.Header}>
             <Text style={Feedstyles.HeaderText}>Click Social</Text>
 
-            <Image source={require('../../../assets/Logo_feed.svg')} style={Feedstyles.Logo} />
+            <View style={{ marginLeft: 9, marginTop: 2 }}>
+              <IconeLogoFeed tamanho={20} />
+            </View>
 
-            <TouchableOpacity style={Feedstyles.SearchButton}>
-              <Image source={require('../../../assets/Buscar_feed.svg')} style={Feedstyles.Search} />
+            <TouchableOpacity
+              style={Feedstyles.SearchButton}
+              onPress={() => aoMudarTela && aoMudarTela("pesquisa")}
+              activeOpacity={0.7}
+            >
+              <IconeBuscarFeed tamanho={20} />
             </TouchableOpacity>
           </View>
 
@@ -90,8 +103,8 @@ import { ITENS_NAV_PADRAO } from "../../components/NavegacaoInferior";
                     <Text style={Feedstyles.MetaText}>{post.time}</Text>
                   </View>
 
-                  <TouchableOpacity style={Feedstyles.MenuButton}>
-                    <Image source={require('../../../assets/mais_informacoes.svg')} style={Feedstyles.MenuDots} />
+                  <TouchableOpacity style={Feedstyles.MenuButton} activeOpacity={0.7}>
+                    <IconeMaisInformacoes tamanho={18} />
                   </TouchableOpacity>
                 </View>
 
@@ -105,28 +118,28 @@ import { ITENS_NAV_PADRAO } from "../../components/NavegacaoInferior";
 
                 <View style={Feedstyles.ActionsRow}>
                   <View style={Feedstyles.ActionItem}>
-                    <TouchableOpacity>
-                    <Image source={require('../../../assets/heart_feed.svg')} style={Feedstyles.ActionIcon} />
+                    <TouchableOpacity activeOpacity={0.7}>
+                      <IconeCoracaoFeed tamanho={20} />
                     </TouchableOpacity>
                     <Text style={Feedstyles.ActionText}>1.9K</Text>
                   </View>
 
                   <View style={Feedstyles.ActionItem}>
-                    <TouchableOpacity>
-                    <Image source={require('../../../assets/message-circle_feed.svg')} style={Feedstyles.ActionIcon} />
+                    <TouchableOpacity activeOpacity={0.7}>
+                      <IconeMensagemFeed tamanho={20} />
                     </TouchableOpacity>
                     <Text style={Feedstyles.ActionText}>120</Text>
                   </View>
 
-                    <View style={Feedstyles.ActionItem}>
-                    <TouchableOpacity>
-                    <Image source={require('../../../assets/Frame_feed.svg')} style={Feedstyles.ActionIcon} />
+                  <View style={Feedstyles.ActionItem}>
+                    <TouchableOpacity activeOpacity={0.7}>
+                      <IconeFrameFeed tamanho={20} />
                     </TouchableOpacity>
                   </View>
 
                   <View style={Feedstyles.ActionItemShare}>
-                    <TouchableOpacity>
-                    <Text style={Feedstyles.ActionIconShare}>Ver mais</Text>
+                    <TouchableOpacity activeOpacity={0.7}>
+                      <Text style={Feedstyles.ActionIconShare}>Ver mais</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -135,7 +148,7 @@ import { ITENS_NAV_PADRAO } from "../../components/NavegacaoInferior";
           </ScrollView>
         </View>
         
-        <ITENS_NAV_PADRAO/>
+        <NavegacaoInferior telaAtiva={telaAtiva} aoMudarTela={aoMudarTela} />
 
         </LinearGradient>
       );

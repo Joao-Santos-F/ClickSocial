@@ -1,6 +1,12 @@
 import { View, Text, TextInput, Image, TouchableOpacity } from 'react-native';
 import { useState } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
+import NavegacaoInferior from '../../components/NavegacaoInferior';
+import {
+  IconeLogoFeed,
+  IconeBuscarFeed,
+  IconeFogoDestaque,
+} from '../../components/IconesSvg';
 import { PesquisaStyles } from './pesquisaStyle';
 
 const destaques = ['Estrada Cata Preta', 'Estrada Cata Preta', 'Estrada Cata Preta'];
@@ -18,7 +24,7 @@ function FaceCard({ image }) {
   return (
     <View style={PesquisaStyles.faceCard}>
       <View style={PesquisaStyles.starTopRight}>
-            <Image source={require('../../../assets/Fire - Destaque.svg')} style={PesquisaStyles.highlightIcon_Image}/>
+        <IconeFogoDestaque largura={14} altura={18} />
       </View>
 
       {image ? (
@@ -40,7 +46,7 @@ function FaceCard({ image }) {
   );
 }
 
-export default function Pesquisa() {
+export default function Pesquisa({ telaAtiva = "Feed", aoMudarTela }) {
   const [searchText, setSearchText] = useState('');
 
   return (
@@ -48,24 +54,25 @@ export default function Pesquisa() {
 
     <View style={PesquisaStyles.container}>
       <View style={PesquisaStyles.headerBar}>
-        <TouchableOpacity>
-        <Text style={PesquisaStyles.title}>Click Social</Text>
+        <TouchableOpacity onPress={() => aoMudarTela && aoMudarTela("Feed")} activeOpacity={0.7}>
+          <Text style={PesquisaStyles.title}>Click Social</Text>
         </TouchableOpacity>
         <View style={PesquisaStyles.titleIconWrap}>
-          <Image source={require('../../../assets/Logo_feed.svg')} style={PesquisaStyles.titleIcon} />
+          <IconeLogoFeed tamanho={22} />
         </View>
       </View>
     <View style={PesquisaStyles.card}>
     <View style={PesquisaStyles.searchBox}>
         <TextInput
           style={PesquisaStyles.searchInput}
-          placeholder=""
+          placeholder="Pesquisar..."
+          placeholderTextColor="#999999"
           value={searchText}
           onChangeText={setSearchText}
           editable={true}
         />
         <View style={PesquisaStyles.searchIconWrap}>
-          <Image source={require('../../../assets/Buscar_feed.svg')} style={PesquisaStyles.searchIcon} />
+          <IconeBuscarFeed tamanho={18} />
         </View>
       </View>
 
@@ -74,7 +81,7 @@ export default function Pesquisa() {
       <View style={PesquisaStyles.highlightList}>
         {destaques.map((item, index) => (
           <View key={`${item}-${index}`} style={PesquisaStyles.highlightRow}>
-            <Image source={require('../../../assets/Fire - Destaque.svg')} style={PesquisaStyles.highlightIcon}/>
+            <IconeFogoDestaque largura={14} altura={18} />
             <Text style={PesquisaStyles.highlightText}>{item}</Text>
           </View>
         ))}
@@ -89,7 +96,7 @@ export default function Pesquisa() {
 
     </View>
 
-    <ITENS_NAV_PADRAO/>
+    <NavegacaoInferior telaAtiva={telaAtiva} aoMudarTela={aoMudarTela} />
     
     </LinearGradient>
   );
