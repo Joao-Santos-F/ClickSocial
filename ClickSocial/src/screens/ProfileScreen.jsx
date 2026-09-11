@@ -13,9 +13,9 @@ import { ProfileHeader } from "../components/ProfileHeader";
 import { ProfileTabs } from "../components/ProfileTabs";
 import { GradePublicacoes } from "../components/GradePublicacoes";
 import { SecaoComentarios } from "../components/SecaoComentarios";
-import { NavegacaoInferior } from "../components/NavegacaoInferior";
+import NavegacaoInferior from "../components/NavegacaoInferior";
 
-export default function ProfileScreen() {
+export default function ProfileScreen({ telaAtiva = "perfil", aoMudarTela }) {
   const [abaAtiva, setAbaAtiva] = useState(0);
 
   return (
@@ -43,7 +43,7 @@ export default function ProfileScreen() {
       </ScrollView>
 
       {/* Footer fixo na parte inferior */}
-      <NavegacaoInferior />
+      <NavegacaoInferior telaAtiva={telaAtiva} aoMudarTela={aoMudarTela} />
     </SafeAreaView>
   );
 }

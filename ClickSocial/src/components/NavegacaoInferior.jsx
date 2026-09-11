@@ -10,7 +10,7 @@ import {
 
 export const ITENS_NAV_PADRAO = [
   {
-    id: "inicio",
+    id: "Feed",
     rotulo: "Início",
     Componente: IconeNavInicio,
   },
@@ -38,8 +38,8 @@ export const ITENS_NAV_PADRAO = [
  * @param {function} aoMudarTela - Callback acionado ao tocar em um item (recebe o id da tela)
  * @param {Array} itens - Lista personalizada de itens (opcional, usa ITENS_NAV_PADRAO por padrão)
  */
-export function NavegacaoInferior({
-  telaAtiva = "perfil",
+export default function NavegacaoInferior({
+  telaAtiva = "Feed",
   aoMudarTela,
   itens = ITENS_NAV_PADRAO,
 }) {
