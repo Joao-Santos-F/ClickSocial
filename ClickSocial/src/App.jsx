@@ -1,34 +1,32 @@
-<<<<<<< HEAD
+import React, { useState } from "react";
 import ProfileScreen from "./screens/ProfileScreen";
+import Feed from "./Pages/Feed/feed";
+import Pesquisa from "./Pages/Pesquisa/pesquisa";
 
 export default function App() {
-  return <ProfileScreen />;
-=======
-import React, { useState, useEffect } from "react";
-import { Platform } from "react-native";
-import LoginScreen from "./screens/LoginScreen";
-import CadastroScreen from "./screens/CadastroScreen";
-import iconLogo from "../assets/incon_logo.png";
+  const [telaAtual, setTelaAtual] = useState("Feed");
 
-export default function App() {
-  const [telaAtual, setTelaAtual] = useState("login");
-
-  useEffect(() => {
-    if (Platform.OS === "web" && typeof document !== "undefined") {
-      let link = document.querySelector("link[rel*='icon']");
-      if (!link) {
-        link = document.createElement("link");
-        link.rel = "shortcut icon";
-        document.getElementsByTagName("head")[0].appendChild(link);
-      }
-      link.href = iconLogo;
+  const navegarPara = (id) => {
+    if (id === "perfil") {
+      setTelaAtual("perfil");
+      return;
     }
-  }, []);
 
-  if (telaAtual === "cadastro") {
-    return <CadastroScreen aoNavegarLogin={() => setTelaAtual("login")} />;
+    if (id === "pesquisa") {
+      setTelaAtual("pesquisa");
+      return;
+    }
+
+    setTelaAtual("Feed");
+  };
+
+  if (telaAtual === "perfil") {
+    return <ProfileScreen telaAtiva="perfil" aoMudarTela={navegarPara} />;
   }
 
-  return <LoginScreen aoNavegarCadastro={() => setTelaAtual("cadastro")} />;
->>>>>>> 119d39536a5b7c3d51b45c7f298bb1ec6f984a36
+  if (telaAtual === "pesquisa") {
+    return <Pesquisa telaAtiva="Feed" aoMudarTela={navegarPara} />;
+  }
+
+  return <Feed telaAtiva="Feed" aoMudarTela={navegarPara} />;
 }
