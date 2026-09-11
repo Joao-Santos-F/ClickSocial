@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -11,81 +11,127 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
-export default function Comentario() {
+export default function Comentario({ onBack, onVoltar, post }) {
+  const [novoTexto, setNovoTexto] = useState('');
+  const [listaComentarios, setListaComentarios] = useState([
+    {
+      id: '1',
+      nome: 'Eduardo Torolho',
+      handle: 'happy_1243',
+      tempo: 'Há 2 minutos',
+      texto: 'É o goat não tem jeito 🔥🔥',
+      curtidas: 12,
+      respostas: 6,
+      avatar: require('../../assets/top amigo 2.png'),
+    },
+  ]);
+
+  const lidarVoltar = onBack || onVoltar;
+
+  const lidarAdicionarComentario = () => {
+    if (!novoTexto.trim()) return;
+    setListaComentarios([
+      ...listaComentarios,
+      {
+        id: String(Date.now()),
+        nome: 'Você',
+        handle: 'meu_usuario',
+        tempo: 'Agora',
+        texto: novoTexto.trim(),
+        curtidas: 0,
+        respostas: 0,
+        avatar: require('../../assets/top amigo 2.png'),
+      },
+    ]);
+    setNovoTexto('');
+  };
+
   return (
     <LinearGradient colors={['#211C52', '#211645', '#0D0914']} style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <View style={styles.card}>
-          {/* Seta de Voltar e Título */}
-          <View style={styles.header}>
-            <TouchableOpacity style={styles.backButton}>
-              <Image
-                source={require('../../assets/incon_seta-esquerda.png')}
-                style={styles.backIcon}
-                resizeMode="contain"
-              />
-            </TouchableOpacity>
-            <Text style={styles.title}>Comentários</Text>
-          </View>
-
-          {/* Campo Digite algo... com ícone de enviar */}
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.input}
-              placeholder="Digite algo..."
-              placeholderTextColor="#999999"
-            />
-            <TouchableOpacity style={styles.sendButton} activeOpacity={0.7}>
-              <Text style={styles.sendIcon}>➤</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Card de Comentário */}
-          <View style={styles.commentCard}>
-            {/* Topo do Comentário: Avatar + Info */}
-            <View style={styles.userHeader}>
-              <Image
-                source={require('../../assets/top amigo 2.png')}
-                style={styles.avatarImage}
-                resizeMode="cover"
-              />
-              <View style={styles.userInfo}>
-                <Text style={styles.userName}>Eduardo Torolho</Text>
-                <Text style={styles.userHandle}>happy_1243</Text>
-                <Text style={styles.timeAgo}>Há 2 minutos</Text>
-              </View>
-            </View>
-
-            {/* Texto do Comentário */}
-            <Text style={styles.commentText}>É o goat não tem jeito 🔥🔥</Text>
-
-            {/* Ações do Comentário (Curtidas e Respostas) */}
-            <View style={styles.actionsRow}>
-              <View style={styles.actionItem}>
+          <View style={styles.card}>
+            {/* Seta de Voltar e Título */}
+            <View style={styles.header}>
+              <TouchableOpacity
+                style={styles.backButton}
+                onPress={lidarVoltar}
+                activeOpacity={0.7}
+              >
                 <Image
-                  source={require('../../assets/incon_coracao.png')}
-                  style={styles.actionIcon}
+                  source={require('../../assets/incon_seta-esquerda.png')}
+                  style={styles.backIcon}
                   resizeMode="contain"
                 />
-                <Text style={styles.actionCount}>12</Text>
-              </View>
-
-              <View style={styles.actionItem}>
-                <Image
-                  source={require('../../assets/incon_notificacao.png')}
-                  style={styles.actionIcon}
-                  resizeMode="contain"
-                />
-                <Text style={styles.actionCount}>6</Text>
-              </View>
+              </TouchableOpacity>
+              <Text style={styles.title}>Comentários</Text>
             </View>
+
+            {/* Campo Digite algo... com ícone de enviar */}
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.input}
+                placeholder="Digite algo..."
+                placeholderTextColor="#999999"
+                value={novoTexto}
+                onChangeText={setNovoTexto}
+              />
+              <TouchableOpacity
+                style={styles.sendButton}
+                activeOpacity={0.7}
+                onPress={lidarAdicionarComentario}
+              >
+                <Text style={styles.sendIcon}>➤</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Lista de Comentários */}
+            {listaComentarios.map((item) => (
+              <View key={item.id} style={styles.commentCard}>
+                {/* Topo do Comentário: Avatar + Info */}
+                <View style={styles.userHeader}>
+                  <Image
+                    source={item.avatar}
+                    style={styles.avatarImage}
+                    resizeMode="cover"
+                  />
+                  <View style={styles.userInfo}>
+                    <Text style={styles.userName}>{item.nome}</Text>
+                    <Text style={styles.userHandle}>{item.handle}</Text>
+                    <Text style={styles.timeAgo}>{item.tempo}</Text>
+                  </View>
+                </View>
+
+                {/* Texto do Comentário */}
+                <Text style={styles.commentText}>{item.texto}</Text>
+
+                {/* Ações do Comentário (Curtidas e Respostas) */}
+                <View style={styles.actionsRow}>
+                  <View style={styles.actionItem}>
+                    <Image
+                      source={require('../../assets/incon_coracao.png')}
+                      style={styles.actionIcon}
+                      resizeMode="contain"
+                    />
+                    <Text style={styles.actionCount}>{item.curtidas}</Text>
+                  </View>
+
+                  <View style={styles.actionItem}>
+                    <Image
+                      source={require('../../assets/incon_notificacao.png')}
+                      style={styles.actionIcon}
+                      resizeMode="contain"
+                    />
+                    <Text style={styles.actionCount}>{item.respostas}</Text>
+                  </View>
+                </View>
+              </View>
+            ))}
           </View>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
-  </LinearGradient>
-);
+        </ScrollView>
+      </SafeAreaView>
+    </LinearGradient>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -156,7 +202,6 @@ const styles = StyleSheet.create({
     color: '#333333',
     paddingVertical: 0,
     paddingHorizontal: 0,
-    outlineStyle: 'none',
   },
   sendButton: {
     padding: 4,

@@ -15,8 +15,16 @@ import { GradePublicacoes } from "../components/GradePublicacoes";
 import { SecaoComentarios } from "../components/SecaoComentarios";
 import NavegacaoInferior from "../components/NavegacaoInferior";
 
-export default function ProfileScreen({ telaAtiva = "perfil", aoMudarTela }) {
+export default function ProfileScreen({
+  telaAtiva = "perfil",
+  aoMudarTela,
+  onEditar,
+  onVoltar,
+}) {
   const [abaAtiva, setAbaAtiva] = useState(0);
+
+  const lidarComEditar = onEditar || (() => aoMudarTela && aoMudarTela("editarPerfil"));
+  const lidarComVoltar = onVoltar || (() => aoMudarTela && aoMudarTela("feed"));
 
   return (
     <SafeAreaView style={styles.container}>
@@ -30,7 +38,7 @@ export default function ProfileScreen({ telaAtiva = "perfil", aoMudarTela }) {
         showsVerticalScrollIndicator={false}
       >
         {/* Cabeçalho do Perfil com Bio digitável e interações */}
-        <ProfileHeader />
+        <ProfileHeader onEditPress={lidarComEditar} onVoltarPress={lidarComVoltar} />
 
         {/* Abas de navegação de conteúdo */}
         <ProfileTabs abaAtiva={abaAtiva} aoMudarAba={setAbaAtiva} />

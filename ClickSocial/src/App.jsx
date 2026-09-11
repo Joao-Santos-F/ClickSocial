@@ -6,12 +6,16 @@ import Feed from "./Pages/Feed/feed";
 import Pesquisa from "./Pages/Pesquisa/pesquisa";
 import CriarPost from "./screens/clicksocial-CriaPost/CriaPost.jsx";
 import DetalhesPost from "./screens/clicksocial-DetalhesPost/DetalhePost.jsx";
+import ProfileScreen from "./screens/ProfileScreen";
+import EditarPerfil from "./screens/EditarPerfil";
+import Comentario from "./screens/Comentario";
 
 export default function App() {
   const [telaAtual, setTelaAtual] = useState("boasVindas");
   const [postSelecionado, setPostSelecionado] = useState(null);
+  const [dadosPerfil, setDadosPerfil] = useState(null);
 
-  // Roteador local incremental para fluxos de autenticação, feed, pesquisa, criar post e detalhes
+  // Roteador local incremental para autenticação, feed, pesquisa, criar post, detalhes, perfil e comentários
   const lidarNavegacaoApp = (id, post) => {
     const destino = (id || "").toLowerCase();
     if (destino === "pesquisa") {
@@ -23,6 +27,12 @@ export default function App() {
     } else if (destino === "detalhes" || destino === "detalhepost") {
       setPostSelecionado(post || null);
       setTelaAtual("detalhes");
+    } else if (destino === "comentarios" || destino === "comentario") {
+      setTelaAtual("comentarios");
+    } else if (destino === "perfil") {
+      setTelaAtual("perfil");
+    } else if (destino === "editarperfil" || destino === "editar") {
+      setTelaAtual("editarPerfil");
     } else if (destino === "sair" || destino === "login") {
       setTelaAtual("login");
     }
@@ -56,6 +66,41 @@ export default function App() {
       <DetalhesPost
         post={postSelecionado}
         onVoltar={() => setTelaAtual("feed")}
+        onVerComentarios={() => setTelaAtual("comentarios")}
+      />
+    );
+  }
+
+  if (telaAtual === "comentarios") {
+    return (
+      <Comentario
+        post={postSelecionado}
+        onVoltar={() => setTelaAtual("detalhes")}
+        onBack={() => setTelaAtual("detalhes")}
+      />
+    );
+  }
+
+  if (telaAtual === "perfil") {
+    return (
+      <ProfileScreen
+        telaAtiva="perfil"
+        aoMudarTela={lidarNavegacaoApp}
+        onEditar={() => setTelaAtual("editarPerfil")}
+        onVoltar={() => setTelaAtual("feed")}
+      />
+    );
+  }
+
+  if (telaAtual === "editarPerfil") {
+    return (
+      <EditarPerfil
+        perfil={dadosPerfil}
+        onVoltar={() => setTelaAtual("perfil")}
+        onSalvar={(novosDados) => {
+          if (novosDados) setDadosPerfil(novosDados);
+          setTelaAtual("perfil");
+        }}
       />
     );
   }
