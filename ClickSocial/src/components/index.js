@@ -5,3 +5,4 @@ export { Divisor } from "./Divisor/Divisor";
 export { BotaoGoogle } from "./BotaoGoogle/BotaoGoogle";
 export { LinkRodape } from "./LinkRodape/LinkRodape";
 export { CampoFoto } from "./CampoFoto/CampoFoto";
+export { BarraNavegacao } from "./BarraNavegacao/BarraNavegacao";
