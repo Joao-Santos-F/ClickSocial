@@ -1,6 +1,7 @@
 import { View, Text, TextInput, Image, TouchableOpacity } from 'react-native';
 import { useState } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
+import NavegacaoInferior from '../../components/NavegacaoInferior';
 import { PesquisaStyles } from './pesquisaStyle';
 
 const destaques = ['Estrada Cata Preta', 'Estrada Cata Preta', 'Estrada Cata Preta'];
@@ -40,7 +41,7 @@ function FaceCard({ image }) {
   );
 }
 
-export default function Pesquisa() {
+export default function Pesquisa({ telaAtiva = "Feed", aoMudarTela }) {
   const [searchText, setSearchText] = useState('');
 
   return (
@@ -48,9 +49,7 @@ export default function Pesquisa() {
 
     <View style={PesquisaStyles.container}>
       <View style={PesquisaStyles.headerBar}>
-        <TouchableOpacity>
         <Text style={PesquisaStyles.title}>Click Social</Text>
-        </TouchableOpacity>
         <View style={PesquisaStyles.titleIconWrap}>
           <Image source={require('../../../assets/Logo_feed.svg')} style={PesquisaStyles.titleIcon} />
         </View>
@@ -89,8 +88,8 @@ export default function Pesquisa() {
 
     </View>
 
-    <ITENS_NAV_PADRAO/>
-    
+    <NavegacaoInferior telaAtiva={telaAtiva} aoMudarTela={aoMudarTela} />
+
     </LinearGradient>
   );
 }

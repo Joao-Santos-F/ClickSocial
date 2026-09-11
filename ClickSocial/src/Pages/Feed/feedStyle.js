@@ -1,11 +1,6 @@
 import { StyleSheet } from "react-native";
 
 export const Feedstyles = StyleSheet.create({
-    container_gradient : {
-
-    },
-
-
     Main_feed : {
         flex: 1,
         width: '100%',
@@ -55,7 +50,7 @@ export const Feedstyles = StyleSheet.create({
     feedContent: {
         alignItems: 'center',
         paddingVertical: 16,
-        paddingBottom: 28,
+        paddingBottom: 15,
     },
     PostCard: {
         width: '95%',

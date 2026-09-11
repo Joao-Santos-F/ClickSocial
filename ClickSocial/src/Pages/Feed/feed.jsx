@@ -1,7 +1,7 @@
 import { ScrollView, Text, View, Image, TouchableOpacity } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Feedstyles } from "./feedStyle";
-import { ITENS_NAV_PADRAO } from "../../components/NavegacaoInferior";
+import  NavegacaoInferior  from "../../components/NavegacaoInferior";
 
 
     const posts = [
@@ -32,6 +32,24 @@ import { ITENS_NAV_PADRAO } from "../../components/NavegacaoInferior";
         avatar: require('../../../assets/Gemini_Generated_Image_1rfyg1rfyg1rfyg1.png'),
         image: require('../../../assets/1212.jpg'),
       },
+        {
+        id: 4,
+        user: "Outro Cara",
+        time: "Ontem",
+        text: "Só eu que acho que o @Arthurbr-YT é uma mona chata? Tipo é, tipo an, tipo nada havê",
+        accent: "#74f7c7",
+        avatar: require('../../../assets/Gemini_Generated_Image_1rfyg1rfyg1rfyg1.png'),
+        image: require('../../../assets/1212.jpg'),
+      },
+        {
+        id: 5,
+        user: "Outro Cara",
+        time: "Ontem",
+        text: "Só eu que acho que o @Arthurbr-YT é uma mona chata? Tipo é, tipo an, tipo nada havê",
+        accent: "#74f7c7",
+        avatar: require('../../../assets/Gemini_Generated_Image_1rfyg1rfyg1rfyg1.png'),
+        image: require('../../../assets/1212.jpg'),
+      },
     ];
 
     function Artwork({ accent }) {
@@ -54,7 +72,7 @@ import { ITENS_NAV_PADRAO } from "../../components/NavegacaoInferior";
       );
     }
 
-    export default function Feed() {
+    export default function Feed({ telaAtiva = "Feed", aoMudarTela }) {
       return (
         <LinearGradient colors={['#211645', '#181122']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={{flex: 1, width: '100%', height: '100%',}}>
         
@@ -64,7 +82,10 @@ import { ITENS_NAV_PADRAO } from "../../components/NavegacaoInferior";
 
             <Image source={require('../../../assets/Logo_feed.svg')} style={Feedstyles.Logo} />
 
-            <TouchableOpacity style={Feedstyles.SearchButton}>
+            <TouchableOpacity
+              style={Feedstyles.SearchButton}
+              onPress={() => aoMudarTela?.("pesquisa")}
+            >
               <Image source={require('../../../assets/Buscar_feed.svg')} style={Feedstyles.Search} />
             </TouchableOpacity>
           </View>
@@ -133,10 +154,12 @@ import { ITENS_NAV_PADRAO } from "../../components/NavegacaoInferior";
               </View>
             ))}
           </ScrollView>
+
         </View>
-        
-        <ITENS_NAV_PADRAO/>
+
+        <NavegacaoInferior telaAtiva={telaAtiva} aoMudarTela={aoMudarTela} />
 
         </LinearGradient>
+        
       );
     }
