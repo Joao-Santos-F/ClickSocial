@@ -49,10 +49,24 @@ export default function ProfileScreen({
         <ProfileTabs abaAtiva={abaAtiva} aoMudarAba={setAbaAtiva} />
 
         {/* Conteúdo dinâmico das Abas */}
-        {abaAtiva === 0 && <GradePublicacoes />}
+        {abaAtiva === 0 && (
+          <GradePublicacoes
+            aoAbrirPost={(post) => aoMudarTela && aoMudarTela("detalhes", post)}
+          />
+        )}
         {abaAtiva === 1 && <SecaoComentarios />}
-        {abaAtiva === 2 && <GradePublicacoes />}
-        {abaAtiva === 3 && <SecaoComentarios />}
+        {abaAtiva === 2 && (
+          <GradePublicacoes
+            apenasCurtidas={true}
+            aoAbrirPost={(post) => aoMudarTela && aoMudarTela("detalhes", post)}
+          />
+        )}
+        {abaAtiva === 3 && (
+          <GradePublicacoes
+            apenasRepublicados={true}
+            aoAbrirPost={(post) => aoMudarTela && aoMudarTela("detalhes", post)}
+          />
+        )}
       </ScrollView>
 
       {/* Footer fixo na parte inferior */}

@@ -197,16 +197,17 @@ export const Feedstyles = StyleSheet.create({
     ActionItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginRight: 10,
+        marginRight: 16,
+        gap: 6,
+        paddingVertical: 4,
     },
     ActionIcon: {
         fontSize: 14,
         color: '#1f2937',
-        marginRight: 6,
     },
     ActionText: {
-        fontSize: 12,
-        color: '#555',
+        fontSize: 13,
+        color: '#6B7280',
     },
     ActionItemShare: {
         marginLeft: 'auto',

@@ -46,6 +46,7 @@ export const PesquisaStyles = StyleSheet.create({
   card: {
     marginTop: 8,
     width: '100%',
+    flex: 1,
     backgroundColor: '#F4F0FA',
     borderWidth: 2,
     borderColor: '#2C106D',

@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet, View, Text, TouchableOpacity } from "react-native";
+import { StyleSheet, View, Text, TouchableOpacity, SafeAreaView } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { LinearGradient } from "expo-linear-gradient";
 import { theme } from "../styles/theme";
@@ -20,35 +20,37 @@ export default function BoasVindasScreen({
       style={styles.containerFundo}
     >
       <StatusBar style="light" />
-      <View style={styles.containerCentral}>
-        <View style={styles.cartao}>
-          <IconeCabecalho tamanho={84} />
+      <SafeAreaView style={{ flex: 1 }}>
+        <View style={styles.containerCentral}>
+          <View style={styles.cartao}>
+            <IconeCabecalho tamanho={84} />
 
-          <Text style={styles.titulo}>ClickSocial</Text>
+            <Text style={styles.titulo}>ClickSocial</Text>
 
-          <Text style={styles.subtitulo}>
-            Conecte-se com pessoas{"\n"}e compartilhe momentos
-          </Text>
+            <Text style={styles.subtitulo}>
+              Conecte-se com pessoas{"\n"}e compartilhe momentos
+            </Text>
 
-          <View style={styles.containerBotoes}>
-            <TouchableOpacity
-              style={styles.botaoEntrar}
-              onPress={lidarLogin}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.textoBotaoEntrar}>Entrar</Text>
-            </TouchableOpacity>
+            <View style={styles.containerBotoes}>
+              <TouchableOpacity
+                style={styles.botaoEntrar}
+                onPress={lidarLogin}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.textoBotaoEntrar}>Entrar</Text>
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.botaoCriarConta}
-              onPress={lidarCadastro}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.textoBotaoCriarConta}>Criar Conta</Text>
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.botaoCriarConta}
+                onPress={lidarCadastro}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.textoBotaoCriarConta}>Criar Conta</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
-      </View>
+      </SafeAreaView>
     </LinearGradient>
   );
 }

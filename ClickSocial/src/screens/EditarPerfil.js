@@ -133,13 +133,14 @@ export default function EditarPerfil({ perfil, onVoltar, onSalvar }) {
             </View>
 
             <View style={styles.formGroup}>
-              <Text style={styles.label}>Bio</Text>
+              <Text style={styles.label}>Bio (máx. 80 caracteres)</Text>
               <TextInput
                 style={[styles.input, styles.textArea]}
                 placeholder="Digite algo para sua Bio"
                 placeholderTextColor="#999999"
                 multiline={true}
                 numberOfLines={4}
+                maxLength={80}
                 textAlignVertical="top"
                 value={bio}
                 onChangeText={setBio}

@@ -6,26 +6,34 @@ import {
   ScrollView,
   Image,
   TouchableOpacity,
+  SafeAreaView,
+  Platform,
+  StatusBar as RNStatusBar,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { LinearGradient } from "expo-linear-gradient";
 import { theme } from "../styles/theme";
 import NavegacaoInferior from "../components/NavegacaoInferior";
+import { IconeMensagemFeed, IconeTabRepost, IconeLogoFeed } from "../components/IconesSvg";
+import iconCoracao from "../../assets/incon_coracao.png";
+import iconSeguidor from "../../assets/incon_seguidor.png";
 
-const NOTIFICACOES = [
+const NOTIFICACOES_PADRAO = [
   {
     id: "1",
     tipo: "curtida",
     usuario: "Arthurbr-YT",
-    texto: "Curitiu sua publicação",
+    texto: "Curtiu sua publicação",
     horario: "10:38",
+    postId: "1",
   },
   {
     id: "2",
     tipo: "comentario",
     usuario: "Arthurbr-YT",
-    texto: "Comentou em sua publicação",
+    texto: "Comentou em sua publicação: 'Ficou demais!'",
     horario: "10:37",
+    postId: "1",
   },
   {
     id: "3",
@@ -33,13 +41,15 @@ const NOTIFICACOES = [
     usuario: "Arthurbr-YT",
     texto: "Começou a te seguir",
     horario: "10:36",
+    postId: null,
   },
   {
     id: "4",
     tipo: "curtida",
     usuario: "Cauhê S.",
-    texto: "Curitiu sua publicação",
+    texto: "Curtiu sua publicação",
     horario: "10:38",
+    postId: "2",
   },
   {
     id: "5",
@@ -47,6 +57,7 @@ const NOTIFICACOES = [
     usuario: "Cauhê S.",
     texto: "Começou a te seguir",
     horario: "10:36",
+    postId: null,
   },
 ];
 
@@ -54,39 +65,54 @@ export default function NotificacoesScreen({
   telaAtiva = "notificacao",
   aoMudarTela,
   aoNavegarAba,
+  posts = [],
+  notificacoes,
+  notificacoesLista,
 }) {
   const lidarNavegacao = aoMudarTela || aoNavegarAba;
+  const listaNotificacoes = notificacoesLista || notificacoes || NOTIFICACOES_PADRAO;
+
+  const lidarCliqueNotificacao = (item) => {
+    if (!lidarNavegacao) return;
+
+    if (item.tipo === "seguir") {
+      lidarNavegacao("perfil");
+    } else {
+      const postAlvo = posts.find((p) => p.id === item.postId) || posts[0];
+      lidarNavegacao("detalhes", postAlvo, "notificacao");
+    }
+  };
 
   const renderizarIcone = (tipo) => {
     switch (tipo) {
       case "curtida":
         return (
           <Image
-            source={require("../../assets/incon_coracao.png")}
+            source={iconCoracao}
             style={styles.iconeImagem}
             resizeMode="contain"
           />
         );
       case "comentario":
-        return (
-          <Image
-            source={require("../../assets/incon_notificacao.png")}
-            style={styles.iconeImagem}
-            resizeMode="contain"
-          />
-        );
+        return <IconeMensagemFeed tamanho={24} cor="#110D20" />;
+      case "repost":
+        return <IconeTabRepost tamanho={24} cor="#00C853" />;
+      case "post":
+        return <IconeLogoFeed tamanho={24} cor="#7C3AED" />;
       case "seguir":
         return (
           <Image
-            source={require("../../assets/incon_seguidor.png")}
+            source={iconSeguidor}
             style={styles.iconeImagem}
             resizeMode="contain"
           />
         );
       default:
-        return null;
+        return <IconeMensagemFeed tamanho={24} cor="#110D20" />;
     }
   };
+
+  const alturaStatusBar = Platform.OS === "android" ? RNStatusBar.currentHeight || 24 : 0;
 
   return (
     <LinearGradient
@@ -94,48 +120,50 @@ export default function NotificacoesScreen({
       style={styles.containerFundo}
     >
       <StatusBar style="light" />
+      <SafeAreaView style={{ flex: 1, paddingTop: alturaStatusBar }}>
+        <View style={styles.conteudoPrincipal}>
+          <View style={styles.cartao}>
+            <View style={styles.cabecalhoCartao}>
+              <Text style={styles.tituloCabecalho}>Notificações</Text>
+            </View>
+            <View style={styles.divisorLinha} />
 
-      <View style={styles.conteudoPrincipal}>
-        <View style={styles.cartao}>
-          <View style={styles.cabecalhoCartao}>
-            <Text style={styles.tituloCabecalho}>Notificações</Text>
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.listaConteudo}
+            >
+              {listaNotificacoes.map((item, index) => (
+                <React.Fragment key={item.id}>
+                  <TouchableOpacity
+                    style={styles.itemNotificacao}
+                    activeOpacity={0.7}
+                    onPress={() => lidarCliqueNotificacao(item)}
+                  >
+                    <View style={styles.containerIcone}>
+                      {renderizarIcone(item.tipo)}
+                    </View>
+                    <View style={styles.containerTexto}>
+                      <Text style={styles.textoMensagem}>
+                        <Text style={styles.nomeUsuario}>{item.usuario}</Text>{" "}
+                        <Text style={styles.acaoTexto}>{item.texto}</Text>
+                      </Text>
+                      <Text style={styles.horarioTexto}>{item.horario}</Text>
+                    </View>
+                  </TouchableOpacity>
+                  {index < listaNotificacoes.length - 1 && (
+                    <View style={styles.divisorLinhaItem} />
+                  )}
+                </React.Fragment>
+              ))}
+            </ScrollView>
           </View>
-          <View style={styles.divisorLinha} />
-
-          <ScrollView
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.listaConteudo}
-          >
-            {NOTIFICACOES.map((item, index) => (
-              <React.Fragment key={item.id}>
-                <TouchableOpacity
-                  style={styles.itemNotificacao}
-                  activeOpacity={0.7}
-                >
-                  <View style={styles.containerIcone}>
-                    {renderizarIcone(item.tipo)}
-                  </View>
-                  <View style={styles.containerTexto}>
-                    <Text style={styles.textoMensagem}>
-                      <Text style={styles.nomeUsuario}>{item.usuario}</Text>{" "}
-                      <Text style={styles.acaoTexto}>{item.texto}</Text>
-                    </Text>
-                    <Text style={styles.horarioTexto}>{item.horario}</Text>
-                  </View>
-                </TouchableOpacity>
-                {index < NOTIFICACOES.length - 1 && (
-                  <View style={styles.divisorLinhaItem} />
-                )}
-              </React.Fragment>
-            ))}
-          </ScrollView>
         </View>
-      </View>
 
-      <NavegacaoInferior
-        telaAtiva={telaAtiva}
-        aoMudarTela={lidarNavegacao}
-      />
+        <NavegacaoInferior
+          telaAtiva={telaAtiva}
+          aoMudarTela={lidarNavegacao}
+        />
+      </SafeAreaView>
     </LinearGradient>
   );
 }

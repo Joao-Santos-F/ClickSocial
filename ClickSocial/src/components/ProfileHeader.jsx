@@ -24,15 +24,6 @@ const DESTAQUES = [
 ];
 
 export function ProfileHeader({ onEditPress, onVoltarPress, dadosPerfil }) {
-  const [bio, setBio] = useState(dadosPerfil?.bio || "");
-  const [estaEditando, setEstaEditando] = useState(false);
-
-  React.useEffect(() => {
-    if (dadosPerfil?.bio !== undefined) {
-      setBio(dadosPerfil.bio);
-    }
-  }, [dadosPerfil?.bio]);
-
   const lidarComVoltar = () => {
     if (onVoltarPress) {
       onVoltarPress();
@@ -44,8 +35,6 @@ export function ProfileHeader({ onEditPress, onVoltarPress, dadosPerfil }) {
   const lidarComEditar = () => {
     if (onEditPress) {
       onEditPress();
-    } else {
-      setEstaEditando(!estaEditando);
     }
   };
 
@@ -117,30 +106,21 @@ export function ProfileHeader({ onEditPress, onVoltarPress, dadosPerfil }) {
         </TouchableOpacity>
       </View>
 
-      {/* Caixa de Bio / Descrição Digitável */}
+      {/* Caixa de Bio Estática */}
       <View style={styles.bioContainer}>
-        <TextInput
-          style={styles.bioInput}
-          placeholder="Escreva sua bio aqui..."
-          placeholderTextColor={theme.colors.inputPlaceholder}
-          value={bio}
-          onChangeText={setBio}
-          maxLength={100}
-          autoCapitalize="sentences"
-          autoCorrect={false}
-        />
+        <Text style={styles.bioInput} numberOfLines={2} ellipsizeMode="tail">
+          {dadosPerfil?.bio || "Criador de conteúdo e explorador de ideias."}
+        </Text>
       </View>
 
       {/* Botões de Ação: Editar e Arquivados */}
       <View style={styles.botoesContainer}>
         <TouchableOpacity
-          style={[styles.botaoAcao, estaEditando && styles.botaoAcaoAtivo]}
+          style={styles.botaoAcao}
           activeOpacity={0.7}
           onPress={lidarComEditar}
         >
-          <Text style={[styles.botaoAcaoTexto, estaEditando && styles.botaoAcaoTextoAtivo]}>
-            {estaEditando ? "Concluir" : "Editar"}
-          </Text>
+          <Text style={styles.botaoAcaoTexto}>Editar</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.botaoAcao}

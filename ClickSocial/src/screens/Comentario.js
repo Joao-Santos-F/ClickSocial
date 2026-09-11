@@ -10,10 +10,15 @@ import {
   SafeAreaView,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import avatarEduardo from '../../assets/top amigo 2.png';
+import avatarDefault from '../../assets/Gemini_Generated_Image_1rfyg1rfyg1rfyg1.png';
+import iconCoracao from '../../assets/incon_coracao.png';
+import iconNotificacao from '../../assets/incon_notificacao.png';
 
-export default function Comentario({ onBack, onVoltar, post }) {
+export default function Comentario({ onBack, onVoltar, post, aoCurtirComentario, aoAdicionarComentario }) {
   const [novoTexto, setNovoTexto] = useState('');
-  const [listaComentarios, setListaComentarios] = useState([
+  
+  const comentariosPadrao = [
     {
       id: '1',
       nome: 'Eduardo Torolho',
@@ -21,28 +26,69 @@ export default function Comentario({ onBack, onVoltar, post }) {
       tempo: 'Há 2 minutos',
       texto: 'É o goat não tem jeito 🔥🔥',
       curtidas: 12,
+      curtido: false,
       respostas: 6,
-      avatar: require('../../assets/top amigo 2.png'),
+      avatar: avatarEduardo,
     },
-  ]);
+    {
+      id: '2',
+      nome: 'Lucas M.',
+      handle: 'lucas_m',
+      tempo: 'Há 10 minutos',
+      texto: 'Sensacional demais!',
+      curtidas: 5,
+      curtido: true,
+      respostas: 1,
+      avatar: avatarDefault,
+    },
+  ];
+
+  const [localComentarios, setLocalComentarios] = useState(post?.comentarios || comentariosPadrao);
+
+  const listaComentarios = post?.comentarios || localComentarios;
 
   const lidarVoltar = onBack || onVoltar;
 
+  const alternarCurtidaComentario = (id) => {
+    if (aoCurtirComentario) {
+      aoCurtirComentario(id);
+    } else {
+      setLocalComentarios((anteriores) =>
+        anteriores.map((item) => {
+          if (item.id === id) {
+            const novoCurtido = !item.curtido;
+            return {
+              ...item,
+              curtido: novoCurtido,
+              curtidas: novoCurtido ? item.curtidas + 1 : Math.max(0, item.curtidas - 1),
+            };
+          }
+          return item;
+        })
+      );
+    }
+  };
+
   const lidarAdicionarComentario = () => {
     if (!novoTexto.trim()) return;
-    setListaComentarios([
-      ...listaComentarios,
-      {
-        id: String(Date.now()),
-        nome: 'Você',
-        handle: 'meu_usuario',
-        tempo: 'Agora',
-        texto: novoTexto.trim(),
-        curtidas: 0,
-        respostas: 0,
-        avatar: require('../../assets/top amigo 2.png'),
-      },
-    ]);
+    if (aoAdicionarComentario) {
+      aoAdicionarComentario(novoTexto.trim());
+    } else {
+      setLocalComentarios([
+        ...listaComentarios,
+        {
+          id: String(Date.now()),
+          nome: 'Você',
+          handle: 'meu_usuario',
+          tempo: 'Agora',
+          texto: novoTexto.trim(),
+          curtidas: 0,
+          curtido: false,
+          respostas: 0,
+          avatar: avatarDefault,
+        },
+      ]);
+    }
     setNovoTexto('');
   };
 
@@ -86,21 +132,32 @@ export default function Comentario({ onBack, onVoltar, post }) {
             </View>
 
             {/* Lista de Comentários */}
-            {listaComentarios.map((item) => (
-              <View key={item.id} style={styles.commentCard}>
-                {/* Topo do Comentário: Avatar + Info */}
-                <View style={styles.userHeader}>
-                  <Image
-                    source={item.avatar}
-                    style={styles.avatarImage}
-                    resizeMode="cover"
-                  />
-                  <View style={styles.userInfo}>
-                    <Text style={styles.userName}>{item.nome}</Text>
-                    <Text style={styles.userHandle}>{item.handle}</Text>
-                    <Text style={styles.timeAgo}>{item.tempo}</Text>
+            {listaComentarios.map((item, index) => {
+              const avatarFonte = item.avatar || (item.nome === 'Eduardo Torolho' ? avatarEduardo : avatarDefault);
+
+              return (
+                <View key={item.id} style={styles.commentCard}>
+                  {/* Topo do Comentário: Avatar + Info */}
+                  <View style={styles.userHeader}>
+                    {typeof avatarFonte === 'string' ? (
+                      <Image
+                        source={{ uri: avatarFonte }}
+                        style={styles.avatarImage}
+                        resizeMode="cover"
+                      />
+                    ) : (
+                      <Image
+                        source={avatarFonte}
+                        style={styles.avatarImage}
+                        resizeMode="cover"
+                      />
+                    )}
+                    <View style={styles.userInfo}>
+                      <Text style={styles.userName}>{item.nome || item.autor}</Text>
+                      <Text style={styles.userHandle}>{item.handle || `@${(item.nome || item.autor || '').toLowerCase().replace(/\s+/g, '')}`}</Text>
+                      <Text style={styles.timeAgo}>{item.tempo || 'Agora'}</Text>
+                    </View>
                   </View>
-                </View>
 
                 {/* Texto do Comentário */}
                 <Text style={styles.commentText}>{item.texto}</Text>
@@ -108,17 +165,33 @@ export default function Comentario({ onBack, onVoltar, post }) {
                 {/* Ações do Comentário (Curtidas e Respostas) */}
                 <View style={styles.actionsRow}>
                   <View style={styles.actionItem}>
-                    <Image
-                      source={require('../../assets/incon_coracao.png')}
-                      style={styles.actionIcon}
-                      resizeMode="contain"
-                    />
-                    <Text style={styles.actionCount}>{item.curtidas}</Text>
+                    <TouchableOpacity
+                      activeOpacity={0.7}
+                      onPress={() => alternarCurtidaComentario(item.id)}
+                      style={{ flexDirection: 'row', alignItems: 'center' }}
+                    >
+                      <Image
+                        source={iconCoracao}
+                        style={[
+                          styles.actionIcon,
+                          { tintColor: item.curtido ? '#FF3B30' : '#8E8A9E' },
+                        ]}
+                        resizeMode="contain"
+                      />
+                      <Text
+                        style={[
+                          styles.actionCount,
+                          item.curtido && { color: '#FF3B30', fontWeight: 'bold' },
+                        ]}
+                      >
+                        {item.curtidas}
+                      </Text>
+                    </TouchableOpacity>
                   </View>
 
                   <View style={styles.actionItem}>
                     <Image
-                      source={require('../../assets/incon_notificacao.png')}
+                      source={iconNotificacao}
                       style={styles.actionIcon}
                       resizeMode="contain"
                     />
@@ -126,7 +199,7 @@ export default function Comentario({ onBack, onVoltar, post }) {
                   </View>
                 </View>
               </View>
-            ))}
+            );})}
           </View>
         </ScrollView>
       </SafeAreaView>
