@@ -17,7 +17,7 @@ import iconCoracao from "../../../assets/incon_coracao.png";
 import avatarCauhe from "../../../assets/avatar_cauhe.jpg";
 import postPreview from "../../../assets/post_preview.jpg";
 
-export const DetalhesPost = ({ onVoltar }) => {
+export const DetalhesPost = ({ onVoltar, onVerComentarios }) => {
   const [curtido, setCurtido] = useState(false);
   const [likes, setLikes] = useState(67);
   const [mostrarComentarios, setMostrarComentarios] = useState(false);
@@ -130,11 +130,11 @@ export const DetalhesPost = ({ onVoltar }) => {
             {/* Link / Botão Ver comentários */}
             <TouchableOpacity
               style={DetalhePostStyles.commentsButton}
-              onPress={() => setMostrarComentarios(!mostrarComentarios)}
+              onPress={onVerComentarios || (() => setMostrarComentarios(!mostrarComentarios))}
               activeOpacity={0.7}
             >
               <Text style={DetalhePostStyles.commentsText}>
-                {mostrarComentarios ? "Ocultar comentários" : "Ver comentários...."}
+                Ver comentários....
               </Text>
             </TouchableOpacity>
 
