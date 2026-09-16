@@ -21,28 +21,43 @@ export default function ProfileScreen({
   onEditar,
   onVoltar,
   dadosPerfil,
+  postsCompartilhados,
+  setPostsCompartilhados,
 }) {
   const [abaAtiva, setAbaAtiva] = useState(0);
 
-  const lidarComEditar = onEditar || (() => aoMudarTela && aoMudarTela("editarPerfil"));
-  const lidarComVoltar = onVoltar || (() => aoMudarTela && aoMudarTela("feed"));
+  // Handlers seguros de navegação do perfil
+  const lidarComEditar = () => {
+    if (typeof onEditar === "function") onEditar();
+    else if (typeof aoMudarTela === "function") aoMudarTela("editarPerfil");
+  };
+
+  const lidarComVoltar = () => {
+    if (typeof onVoltar === "function") onVoltar();
+    else if (typeof aoMudarTela === "function") aoMudarTela("feed");
+  };
+
+  const postsUsuario = (postsCompartilhados || []).filter(
+    (p) =>
+      (p.user || "").toLowerCase() === (dadosPerfil?.usuario || "").toLowerCase() ||
+      (p.user || "").toLowerCase() === (dadosPerfil?.nome || "").toLowerCase()
+  );
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* StatusBar com estilo light (ícones claros no fundo escuro) */}
       <StatusBar style="light" backgroundColor={theme.colors.background} translucent />
 
-      {/* Conteúdo com scroll e margem superior ajustada para StatusBar */}
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.conteudoScroll}
         showsVerticalScrollIndicator={false}
       >
-        {/* Cabeçalho do Perfil com Bio digitável e interações */}
+        {/* Cabeçalho do Perfil com foto dinâmica e dados reais */}
         <ProfileHeader
           onEditPress={lidarComEditar}
           onVoltarPress={lidarComVoltar}
           dadosPerfil={dadosPerfil}
+          postsCount={postsUsuario.length}
         />
 
         {/* Abas de navegação de conteúdo */}
@@ -51,19 +66,34 @@ export default function ProfileScreen({
         {/* Conteúdo dinâmico das Abas */}
         {abaAtiva === 0 && (
           <GradePublicacoes
+            apenasPostados={true}
+            dadosPerfil={dadosPerfil}
+            postsCompartilhados={postsCompartilhados}
+            setPostsCompartilhados={setPostsCompartilhados}
             aoAbrirPost={(post) => aoMudarTela && aoMudarTela("detalhes", post)}
           />
         )}
-        {abaAtiva === 1 && <SecaoComentarios />}
+        {abaAtiva === 1 && (
+          <SecaoComentarios
+            dadosPerfil={dadosPerfil}
+            postsCompartilhados={postsCompartilhados}
+          />
+        )}
         {abaAtiva === 2 && (
           <GradePublicacoes
             apenasCurtidas={true}
+            dadosPerfil={dadosPerfil}
+            postsCompartilhados={postsCompartilhados}
+            setPostsCompartilhados={setPostsCompartilhados}
             aoAbrirPost={(post) => aoMudarTela && aoMudarTela("detalhes", post)}
           />
         )}
         {abaAtiva === 3 && (
           <GradePublicacoes
             apenasRepublicados={true}
+            dadosPerfil={dadosPerfil}
+            postsCompartilhados={postsCompartilhados}
+            setPostsCompartilhados={setPostsCompartilhados}
             aoAbrirPost={(post) => aoMudarTela && aoMudarTela("detalhes", post)}
           />
         )}

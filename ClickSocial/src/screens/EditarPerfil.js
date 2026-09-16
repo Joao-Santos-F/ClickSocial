@@ -40,10 +40,15 @@ export default function EditarPerfil({ perfil, onVoltar, onSalvar }) {
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.8,
+        base64: true,
       });
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
-        setImagemPerfil({ uri: result.assets[0].uri });
+        const asset = result.assets[0];
+        const uriPermanente = asset.base64
+          ? `data:image/jpeg;base64,${asset.base64}`
+          : asset.uri;
+        setImagemPerfil({ uri: uriPermanente });
       }
     } catch (error) {
       console.log('Erro ao selecionar imagem:', error);
@@ -52,18 +57,11 @@ export default function EditarPerfil({ perfil, onVoltar, onSalvar }) {
   };
 
   const lidarSalvar = () => {
-    Alert.alert('Perfil atualizado', 'As alterações foram salvas com sucesso.', [
-      {
-        text: 'OK',
-        onPress: () => {
-          if (onSalvar) {
-            onSalvar({ nome, usuario, bio, imagemPerfil });
-          } else if (onVoltar) {
-            onVoltar();
-          }
-        },
-      },
-    ]);
+    if (onSalvar) {
+      onSalvar({ nome, usuario, bio, imagemPerfil });
+    } else if (onVoltar) {
+      onVoltar();
+    }
   };
 
   return (

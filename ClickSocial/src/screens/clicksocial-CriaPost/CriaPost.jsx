@@ -46,10 +46,15 @@ export const CriarPost = ({ onVoltar, onPublicarSucesso, dadosPerfil }) => {
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.8,
+        base64: true,
       });
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
-        setImagem({ uri: result.assets[0].uri });
+        const asset = result.assets[0];
+        const uriPermanente = asset.base64
+          ? `data:image/jpeg;base64,${asset.base64}`
+          : asset.uri;
+        setImagem({ uri: uriPermanente });
       }
     } catch (error) {
       console.log("Erro ao selecionar imagem:", error);
@@ -73,10 +78,15 @@ export const CriarPost = ({ onVoltar, onPublicarSucesso, dadosPerfil }) => {
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.8,
+        base64: true,
       });
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
-        setImagem({ uri: result.assets[0].uri });
+        const asset = result.assets[0];
+        const uriPermanente = asset.base64
+          ? `data:image/jpeg;base64,${asset.base64}`
+          : asset.uri;
+        setImagem({ uri: uriPermanente });
       }
     } catch (error) {
       console.log("Erro ao abrir câmera:", error);
@@ -121,17 +131,8 @@ export const CriarPost = ({ onVoltar, onPublicarSucesso, dadosPerfil }) => {
     if (onVoltar) {
       onVoltar();
     } else {
-      Alert.alert("Voltar", "Deseja descartar as alterações?", [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Descartar",
-          style: "destructive",
-          onPress: () => {
-            setTexto("");
-            setLocalizacao(null);
-          },
-        },
-      ]);
+      setTexto("");
+      setLocalizacao(null);
     }
   };
 
@@ -151,7 +152,7 @@ export const CriarPost = ({ onVoltar, onPublicarSucesso, dadosPerfil }) => {
       time: "Agora",
       text: texto.trim(),
       accent: "#5ef9d6",
-      avatar: dadosPerfil?.imagemPerfil || require("../../../assets/Gemini_Generated_Image_1rfyg1rfyg1rfyg1.png"),
+      avatar: dadosPerfil?.imagemPerfil || require("../../../assets/WhatsApp Image 2026-08-25 at 11.25.57 2.png"),
       image: imagem ? imagem.uri : null,
       curtidas: 0,
       curtido: false,
@@ -161,26 +162,17 @@ export const CriarPost = ({ onVoltar, onPublicarSucesso, dadosPerfil }) => {
       tags: tagsSelecionadas,
     };
 
-    Alert.alert(
-      "Publicado com sucesso!",
-      "Sua publicação foi compartilhada na ClickSocial.",
-      [
-        {
-          text: "OK",
-          onPress: () => {
-            setTexto("");
-            setLocalizacao(null);
-            setImagem(null);
-            setTagsSelecionadas(["#ClickSocial"]);
-            if (onPublicarSucesso) {
-              onPublicarSucesso(novoPost);
-            } else if (onVoltar) {
-              onVoltar();
-            }
-          },
-        },
-      ]
-    );
+    setTexto("");
+    setLocalizacao(null);
+    setImagem(null);
+    setTagsSelecionadas(["#ClickSocial"]);
+
+    // Executa a publicação diretamente e retorna ao feed
+    if (onPublicarSucesso) {
+      onPublicarSucesso(novoPost);
+    } else if (onVoltar) {
+      onVoltar();
+    }
   };
 
   return (

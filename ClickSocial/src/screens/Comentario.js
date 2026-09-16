@@ -11,17 +11,21 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import avatarEduardo from '../../assets/top amigo 2.png';
-import avatarDefault from '../../assets/Gemini_Generated_Image_1rfyg1rfyg1rfyg1.png';
+import avatarDefault from '../../assets/WhatsApp Image 2026-08-25 at 11.25.57 2.png';
 import iconCoracao from '../../assets/incon_coracao.png';
 import iconNotificacao from '../../assets/incon_notificacao.png';
+import { useApi } from '../context/ApiContext';
 
 export default function Comentario({ onBack, onVoltar, post, aoCurtirComentario, aoAdicionarComentario }) {
+  const { usuarios = [], dadosPerfil = {} } = useApi();
   const [novoTexto, setNovoTexto] = useState('');
-  
+  const [replyToComment, setReplyToComment] = useState(null);
+
   const comentariosPadrao = [
     {
       id: '1',
       nome: 'Eduardo Torolho',
+      autor: 'Eduardo Torolho',
       handle: 'happy_1243',
       tempo: 'Há 2 minutos',
       texto: 'É o goat não tem jeito 🔥🔥',
@@ -33,11 +37,12 @@ export default function Comentario({ onBack, onVoltar, post, aoCurtirComentario,
     {
       id: '2',
       nome: 'Lucas M.',
+      autor: 'Lucas M.',
       handle: 'lucas_m',
       tempo: 'Há 10 minutos',
       texto: 'Sensacional demais!',
       curtidas: 5,
-      curtido: true,
+      curtido: false,
       respostas: 1,
       avatar: avatarDefault,
     },
@@ -69,27 +74,80 @@ export default function Comentario({ onBack, onVoltar, post, aoCurtirComentario,
     }
   };
 
-  const lidarAdicionarComentario = () => {
+  const lidarAdicionarComentario = async () => {
     if (!novoTexto.trim()) return;
-    if (aoAdicionarComentario) {
-      aoAdicionarComentario(novoTexto.trim());
-    } else {
-      setLocalComentarios([
-        ...listaComentarios,
-        {
-          id: String(Date.now()),
-          nome: 'Você',
-          handle: 'meu_usuario',
-          tempo: 'Agora',
-          texto: novoTexto.trim(),
-          curtidas: 0,
-          curtido: false,
-          respostas: 0,
-          avatar: avatarDefault,
-        },
-      ]);
-    }
+    const textoParaEnviar = novoTexto.trim();
+    const parentId = replyToComment ? replyToComment.id : null;
+    
     setNovoTexto('');
+    setReplyToComment(null);
+
+    if (aoAdicionarComentario) {
+      await aoAdicionarComentario(textoParaEnviar, parentId);
+    } else {
+      const novoObj = {
+        id: String(Date.now()),
+        parentCommentId: parentId,
+        nome: dadosPerfil?.nome || 'Você',
+        autor: dadosPerfil?.usuario || 'Você',
+        handle: dadosPerfil?.usuario || 'meu_usuario',
+        tempo: 'Agora',
+        texto: textoParaEnviar,
+        curtidas: 0,
+        curtido: false,
+        respostas: 0,
+        avatar: dadosPerfil?.imagemPerfil || avatarDefault,
+      };
+      setLocalComentarios((prev) => [...prev, novoObj]);
+    }
+  };
+
+  const resolverAvatarAutor = (item) => {
+    const nomeAutor = item.autor || item.nome || '';
+    
+    // 1. Procura se o autor é o usuário atualmente logado (dadosPerfil)
+    if (
+      dadosPerfil &&
+      (nomeAutor.toLowerCase() === (dadosPerfil.usuario || '').toLowerCase() ||
+       nomeAutor.toLowerCase() === (dadosPerfil.nome || '').toLowerCase() ||
+       nomeAutor === 'Você')
+    ) {
+      if (dadosPerfil.imagemPerfil) return dadosPerfil.imagemPerfil;
+    }
+
+    // 2. Procura o autor na lista global de usuários
+    const userMatch = usuarios.find(
+      (u) =>
+        (u.usuario || '').toLowerCase() === nomeAutor.toLowerCase() ||
+        (u.nome || '').toLowerCase() === nomeAutor.toLowerCase() ||
+        (u.email || '').toLowerCase() === nomeAutor.toLowerCase()
+    );
+
+    if (userMatch) {
+      if (userMatch.fotoUri) {
+        return { uri: userMatch.fotoUri };
+      }
+      if (userMatch.imagemPerfil) {
+        return typeof userMatch.imagemPerfil === 'string'
+          ? { uri: userMatch.imagemPerfil }
+          : userMatch.imagemPerfil;
+      }
+    }
+
+    // 3. Fallback para avatar do comentário original se existir
+    if (item.avatar) {
+      if (typeof item.avatar === 'string') {
+        if (item.avatar.includes('http') || item.avatar.includes('blob:')) {
+          return { uri: item.avatar };
+        }
+      } else {
+        return item.avatar;
+      }
+    }
+
+    // 4. Fallback padrão
+    if (nomeAutor === 'Eduardo Torolho') return avatarEduardo;
+    return avatarDefault;
   };
 
   return (
@@ -113,11 +171,23 @@ export default function Comentario({ onBack, onVoltar, post, aoCurtirComentario,
               <Text style={styles.title}>Comentários</Text>
             </View>
 
+            {/* Banner de Resposta se um comentário pai estiver selecionado */}
+            {replyToComment && (
+              <View style={styles.replyBanner}>
+                <Text style={styles.replyBannerText}>
+                  Respondendo a <Text style={{ fontWeight: 'bold' }}>@{replyToComment.autor || replyToComment.nome}</Text>
+                </Text>
+                <TouchableOpacity onPress={() => setReplyToComment(null)}>
+                  <Text style={styles.replyBannerCancel}>✕</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
             {/* Campo Digite algo... com ícone de enviar */}
             <View style={styles.inputContainer}>
               <TextInput
                 style={styles.input}
-                placeholder="Digite algo..."
+                placeholder={replyToComment ? `Responder a @${replyToComment.autor || replyToComment.nome}...` : "Digite algo..."}
                 placeholderTextColor="#999999"
                 value={novoTexto}
                 onChangeText={setNovoTexto}
@@ -132,14 +202,20 @@ export default function Comentario({ onBack, onVoltar, post, aoCurtirComentario,
             </View>
 
             {/* Lista de Comentários */}
-            {listaComentarios.map((item, index) => {
-              const avatarFonte = item.avatar || (item.nome === 'Eduardo Torolho' ? avatarEduardo : avatarDefault);
+            {listaComentarios.map((item) => {
+              const avatarFonte = resolverAvatarAutor(item);
 
               return (
                 <View key={item.id} style={styles.commentCard}>
                   {/* Topo do Comentário: Avatar + Info */}
                   <View style={styles.userHeader}>
-                    {typeof avatarFonte === 'string' ? (
+                    {typeof avatarFonte === 'object' && avatarFonte.uri ? (
+                      <Image
+                        source={{ uri: avatarFonte.uri }}
+                        style={styles.avatarImage}
+                        resizeMode="cover"
+                      />
+                    ) : typeof avatarFonte === 'string' ? (
                       <Image
                         source={{ uri: avatarFonte }}
                         style={styles.avatarImage}
@@ -159,47 +235,79 @@ export default function Comentario({ onBack, onVoltar, post, aoCurtirComentario,
                     </View>
                   </View>
 
-                {/* Texto do Comentário */}
-                <Text style={styles.commentText}>{item.texto}</Text>
+                  {/* Texto do Comentário */}
+                  <Text style={styles.commentText}>{item.texto}</Text>
 
-                {/* Ações do Comentário (Curtidas e Respostas) */}
-                <View style={styles.actionsRow}>
-                  <View style={styles.actionItem}>
-                    <TouchableOpacity
-                      activeOpacity={0.7}
-                      onPress={() => alternarCurtidaComentario(item.id)}
-                      style={{ flexDirection: 'row', alignItems: 'center' }}
-                    >
-                      <Image
-                        source={iconCoracao}
-                        style={[
-                          styles.actionIcon,
-                          { tintColor: item.curtido ? '#FF3B30' : '#8E8A9E' },
-                        ]}
-                        resizeMode="contain"
-                      />
-                      <Text
-                        style={[
-                          styles.actionCount,
-                          item.curtido && { color: '#FF3B30', fontWeight: 'bold' },
-                        ]}
+                  {/* Ações do Comentário */}
+                  <View style={styles.actionsRow}>
+                    <View style={styles.actionItem}>
+                      <TouchableOpacity
+                        activeOpacity={0.7}
+                        onPress={() => alternarCurtidaComentario(item.id)}
+                        style={{ flexDirection: 'row', alignItems: 'center' }}
                       >
-                        {item.curtidas}
-                      </Text>
-                    </TouchableOpacity>
+                        <Image
+                          source={iconCoracao}
+                          style={[
+                            styles.actionIcon,
+                            { tintColor: item.curtido ? '#FF3B30' : '#8E8A9E' },
+                          ]}
+                          resizeMode="contain"
+                        />
+                        <Text
+                          style={[
+                            styles.actionCount,
+                            item.curtido && { color: '#FF3B30', fontWeight: 'bold' },
+                          ]}
+                        >
+                          {item.curtidas || 0}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+
+                    <View style={styles.actionItem}>
+                      <TouchableOpacity
+                        activeOpacity={0.7}
+                        onPress={() => setReplyToComment(item)}
+                        style={{ flexDirection: 'row', alignItems: 'center' }}
+                      >
+                        <Image
+                          source={iconNotificacao}
+                          style={styles.actionIcon}
+                          resizeMode="contain"
+                        />
+                        <Text style={styles.actionCount}>{item.respostas || (item.respostasLista ? item.respostasLista.length : 0)}</Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
 
-                  <View style={styles.actionItem}>
-                    <Image
-                      source={iconNotificacao}
-                      style={styles.actionIcon}
-                      resizeMode="contain"
-                    />
-                    <Text style={styles.actionCount}>{item.respostas}</Text>
-                  </View>
+                  {/* Respostas Aninhadas (Child Comments) */}
+                  {Array.isArray(item.respostasLista) && item.respostasLista.length > 0 && (
+                    <View style={styles.subCommentsContainer}>
+                      {item.respostasLista.map((subItem) => {
+                        const subAvatar = resolverAvatarAutor(subItem);
+                        return (
+                          <View key={subItem.id} style={styles.subCommentCard}>
+                            <View style={styles.userHeader}>
+                              {typeof subAvatar === 'object' && subAvatar.uri ? (
+                                <Image source={{ uri: subAvatar.uri }} style={styles.subAvatarImage} resizeMode="cover" />
+                              ) : (
+                                <Image source={subAvatar} style={styles.subAvatarImage} resizeMode="cover" />
+                              )}
+                              <View style={styles.userInfo}>
+                                <Text style={styles.userName}>{subItem.nome || subItem.autor}</Text>
+                                <Text style={styles.userHandle}>@{subItem.autor}</Text>
+                              </View>
+                            </View>
+                            <Text style={styles.subCommentText}>{subItem.texto}</Text>
+                          </View>
+                        );
+                      })}
+                    </View>
+                  )}
                 </View>
-              </View>
-            );})}
+              );
+            })}
           </View>
         </ScrollView>
       </SafeAreaView>
@@ -258,6 +366,26 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#1A1A1A',
   },
+  replyBanner: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#E4DCED',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+    marginBottom: 8,
+  },
+  replyBannerText: {
+    fontSize: 13,
+    color: '#333333',
+  },
+  replyBannerCancel: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#666666',
+    paddingHorizontal: 4,
+  },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -291,6 +419,7 @@ const styles = StyleSheet.create({
     borderColor: '#E4DCED',
     borderRadius: 12,
     padding: 14,
+    marginBottom: 12,
   },
   userHeader: {
     flexDirection: 'row',
@@ -302,6 +431,7 @@ const styles = StyleSheet.create({
     height: 42,
     borderRadius: 21,
     marginRight: 10,
+    backgroundColor: '#E4DCED',
   },
   userInfo: {
     justifyContent: 'center',
@@ -347,4 +477,28 @@ const styles = StyleSheet.create({
     color: '#444444',
     fontWeight: '500',
   },
+  subCommentsContainer: {
+    marginTop: 10,
+    paddingLeft: 12,
+    borderLeftWidth: 2,
+    borderLeftColor: '#D1C4E9',
+  },
+  subCommentCard: {
+    backgroundColor: '#F0EBF8',
+    borderRadius: 8,
+    padding: 8,
+    marginTop: 6,
+  },
+  subAvatarImage: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    marginRight: 8,
+  },
+  subCommentText: {
+    fontSize: 13,
+    color: '#222222',
+    marginTop: 2,
+  },
 });
+

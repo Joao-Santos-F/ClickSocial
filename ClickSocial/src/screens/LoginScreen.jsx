@@ -13,8 +13,7 @@ import {
 import { StatusBar } from "expo-status-bar";
 import { LinearGradient } from "expo-linear-gradient";
 import { theme } from "../styles/theme";
-
-// Apenas para o commit
+import { useApi } from "../context/ApiContext";
 
 import {
   IconeCabecalho,
@@ -32,6 +31,7 @@ export default function LoginScreen({
   onVoltar,
   aoFazerLogin,
 }) {
+  const { fazerLogin } = useApi();
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [carregando, setCarregando] = useState(false);
@@ -39,19 +39,29 @@ export default function LoginScreen({
   const lidarNavegarCadastro = aoNavegarCadastro || onCadastro;
   const lidarVoltar = aoNavegarBoasVindas || onVoltar;
 
-  const lidarComLogin = () => {
+  const lidarComLogin = async () => {
     if (!email || !senha) {
       Alert.alert("Atenção", "Por favor, preencha os campos de e-mail e senha.");
       return;
     }
 
     setCarregando(true);
-    setTimeout(() => {
+    try {
+      const res = await fazerLogin({ email, senha });
       setCarregando(false);
-      Alert.alert("Sucesso", `Login efetuado com o e-mail: ${email}`, [
-        { text: "OK", onPress: () => aoFazerLogin && aoFazerLogin() },
-      ]);
-    }, 1200);
+
+      if (res.sucesso) {
+        // Redireciona imediatamente para o feed do aplicativo
+        if (aoFazerLogin) {
+          aoFazerLogin();
+        }
+      } else {
+        Alert.alert("Erro de Autenticação", res.mensagem || "E-mail ou senha incorretos.");
+      }
+    } catch (error) {
+      setCarregando(false);
+      Alert.alert("Erro", "Ocorreu um erro ao tentar fazer login.");
+    }
   };
 
   const lidarComLoginGoogle = () => {
@@ -69,57 +79,57 @@ export default function LoginScreen({
           style={styles.keyboardContainer}
           behavior={Platform.OS === "ios" ? "padding" : "height"}
         >
-        <ScrollView
-          contentContainerStyle={styles.conteudoRolagem}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-        >
-          <View style={styles.cartao}>
-            <TouchableOpacity
-              onPress={lidarVoltar}
-              disabled={!lidarVoltar}
-              activeOpacity={0.7}
-            >
-              <IconeCabecalho tamanho={60} />
-            </TouchableOpacity>
+          <ScrollView
+            contentContainerStyle={styles.conteudoRolagem}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={styles.cartao}>
+              <TouchableOpacity
+                onPress={lidarVoltar}
+                disabled={!lidarVoltar}
+                activeOpacity={0.7}
+              >
+                <IconeCabecalho tamanho={60} />
+              </TouchableOpacity>
 
-            <Text style={styles.titulo}>Login</Text>
+              <Text style={styles.titulo}>Login</Text>
 
-            <CampoTexto
-              rotulo="E-mail"
-              textoAjuda="Digite seu email"
-              valor={email}
-              aoMudarTexto={setEmail}
-              tipoTeclado="email-address"
-              capitalizacaoAutomatica="none"
-            />
+              <CampoTexto
+                rotulo="E-mail"
+                textoAjuda="Digite seu email"
+                valor={email}
+                aoMudarTexto={setEmail}
+                tipoTeclado="email-address"
+                capitalizacaoAutomatica="none"
+              />
 
-            <CampoTexto
-              rotulo="Senha"
-              textoAjuda="Digite sua senha"
-              valor={senha}
-              aoMudarTexto={setSenha}
-              senhaSegura
-            />
+              <CampoTexto
+                rotulo="Senha"
+                textoAjuda="Digite sua senha"
+                valor={senha}
+                aoMudarTexto={setSenha}
+                senhaSegura
+              />
 
-            <BotaoPrincipal
-              titulo="Entrar"
-              aoPressionar={lidarComLogin}
-              carregando={carregando}
-            />
+              <BotaoPrincipal
+                titulo="Entrar"
+                aoPressionar={lidarComLogin}
+                carregando={carregando}
+              />
 
-            <Divisor texto="ou" />
+              <Divisor texto="ou" />
 
-            <BotaoGoogle aoPressionar={lidarComLoginGoogle} />
+              <BotaoGoogle aoPressionar={lidarComLoginGoogle} />
 
-            <LinkRodape
-              textoPergunta="Não tem uma conta?"
-              textoAcao="Cadastra-se"
-              aoPressionarAcao={lidarNavegarCadastro}
-            />
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+              <LinkRodape
+                textoPergunta="Não tem uma conta?"
+                textoAcao="Cadastre-se"
+                aoPressionarAcao={lidarNavegarCadastro}
+              />
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     </LinearGradient>
   );

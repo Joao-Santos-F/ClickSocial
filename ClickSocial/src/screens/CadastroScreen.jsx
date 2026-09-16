@@ -13,8 +13,8 @@ import {
 import { StatusBar } from "expo-status-bar";
 import { LinearGradient } from "expo-linear-gradient";
 import { theme } from "../styles/theme";
+import { useApi } from "../context/ApiContext";
 
-// Importação dos componentes modulares em PT-BR
 import {
   IconeCabecalho,
   CampoTexto,
@@ -29,6 +29,7 @@ export default function CadastroScreen({
   onLogin,
   onVoltar,
 }) {
+  const { cadastrarUsuario } = useApi();
   const [nomeCompleto, setNomeCompleto] = useState("");
   const [nomeUsuario, setNomeUsuario] = useState("");
   const [email, setEmail] = useState("");
@@ -39,7 +40,7 @@ export default function CadastroScreen({
   const lidarNavegarLogin = aoNavegarLogin || onLogin;
   const lidarVoltar = aoNavegarBoasVindas || onVoltar || lidarNavegarLogin;
 
-  const lidarComCadastro = () => {
+  const lidarComCadastro = async () => {
     if (!nomeCompleto || !nomeUsuario || !email || !senha) {
       Alert.alert(
         "Campos Obrigatórios",
@@ -49,12 +50,28 @@ export default function CadastroScreen({
     }
 
     setCarregando(true);
-    setTimeout(() => {
+    try {
+      const res = await cadastrarUsuario({
+        nomeCompleto,
+        nomeUsuario,
+        email,
+        senha,
+        fotoUri,
+      });
+
       setCarregando(false);
-      Alert.alert("Sucesso", "Conta criada com sucesso!", [
-        { text: "OK", onPress: () => lidarNavegarLogin && lidarNavegarLogin() },
-      ]);
-    }, 1200);
+
+      if (res.sucesso) {
+        if (lidarNavegarLogin) {
+          lidarNavegarLogin();
+        }
+      } else {
+        Alert.alert("Erro no Cadastro", res.mensagem || "Não foi possível cadastrar a conta.");
+      }
+    } catch (error) {
+      setCarregando(false);
+      Alert.alert("Erro", "Ocorreu um erro inesperado ao cadastrar a conta.");
+    }
   };
 
   return (

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Text,
   View,
@@ -8,41 +8,67 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
-    SafeAreaView,
+  SafeAreaView,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 
 import { DetalhePostStyles } from "./DetalhePost.js";
 import setaE from "../../../assets/incon_seta-esquerda.png";
 import iconCoracao from "../../../assets/incon_coracao.png";
-import avatarCauhe from "../../../assets/avatar_cauhe.jpg";
-import postPreview from "../../../assets/post_preview.jpg";
-
-import avatarEduardo from "../../../assets/top amigo 2.png";
-import avatarDefault from "../../../assets/Gemini_Generated_Image_1rfyg1rfyg1rfyg1.png";
+import avatarDefault from "../../../assets/WhatsApp Image 2026-08-25 at 11.25.57 2.png";
+import { useApi } from "../../context/ApiContext";
 
 export const DetalhesPost = ({ onVoltar, onVerComentarios, post, aoCurtirPost }) => {
-  const [curtido, setCurtido] = useState(post?.curtido || false);
-  const likesPadrao = post?.curtidas ? Number(post.curtidas) : (post?.likes || 67);
-  const [likes, setLikes] = useState(likesPadrao);
+  const { usuarios = [], dadosPerfil = {} } = useApi();
+
+  const [curtido, setCurtido] = useState(Boolean(post?.curtido));
+  const [likes, setLikes] = useState(
+    post?.curtidas !== undefined && post?.curtidas !== null
+      ? Number(post.curtidas)
+      : (post?.likes ?? 0)
+  );
   const [mostrarComentarios, setMostrarComentarios] = useState(false);
   const [novoComentario, setNovoComentario] = useState("");
-  const [comentarios, setComentarios] = useState(post?.comentarios || [
-    { id: "1", autor: "Lucas M.", texto: "Sensacional demais!", avatar: avatarDefault },
-    { id: "2", autor: "Beatriz R.", texto: "Parabéns, ficou incrível!", avatar: avatarEduardo },
-  ]);
+  const [comentarios, setComentarios] = useState(post?.comentarios || []);
 
-  const autorNome = post?.user || post?.autor || "Cauhê S.";
-  const autorUsername = post?.username || (post?.user ? `@${post.user.toLowerCase().replace(/[^a-z0-9_]/g, "")}` : "@grugez");
-  const autorTime = post?.time || post?.tempo || "Há 5 horas";
-  const postTexto = post?.text || post?.texto || "Irmão, teu álbum merece um premio!!!!";
-  const postImagem = post?.image || post?.imagem || postPreview;
-  const postAvatar = post?.avatar || avatarCauhe;
+  useEffect(() => {
+    if (post) {
+      setCurtido(Boolean(post.curtido));
+      setLikes(
+        post.curtidas !== undefined && post.curtidas !== null
+          ? Number(post.curtidas)
+          : (post.likes ?? 0)
+      );
+      setComentarios(post.comentarios || []);
+    }
+  }, [post]);
+
+  const autorNome = post?.user || post?.autor || dadosPerfil?.nome || "Usuário";
+  const autorUsername = post?.user
+    ? `@${post.user.toLowerCase().replace(/[^a-z0-9_]/g, "")}`
+    : "@usuario";
+  const autorTime = post?.time || post?.tempo || "Agora";
+  const postTexto = post?.text || post?.texto || "";
+  const rawImagem = post?.image || post?.imagem || null;
+
+  // Resolver foto real do autor do post
+  const autorMatch = usuarios.find(
+    (u) =>
+      u.usuario?.toLowerCase() === (post?.user || "").toLowerCase() ||
+      u.nome?.toLowerCase() === (post?.user || "").toLowerCase()
+  );
+
+  const postAvatar =
+    (autorMatch?.fotoUri ? { uri: autorMatch.fotoUri } : null) ||
+    (autorMatch?.imagemPerfil ? (typeof autorMatch.imagemPerfil === "string" ? { uri: autorMatch.imagemPerfil } : autorMatch.imagemPerfil) : null) ||
+    (dadosPerfil?.usuario?.toLowerCase() === (post?.user || "").toLowerCase() ? (dadosPerfil.imagemPerfil || (dadosPerfil.fotoUri ? { uri: dadosPerfil.fotoUri } : null)) : null) ||
+    post?.avatar ||
+    avatarDefault;
 
   const handleLike = () => {
     if (curtido) {
       setCurtido(false);
-      setLikes(likes - 1);
+      setLikes(Math.max(0, likes - 1));
     } else {
       setCurtido(true);
       setLikes(likes + 1);
@@ -58,9 +84,9 @@ export const DetalhesPost = ({ onVoltar, onVerComentarios, post, aoCurtirPost })
       ...comentarios,
       {
         id: String(Date.now()),
-        autor: "Você",
+        autor: dadosPerfil?.usuario || "Você",
         texto: novoComentario.trim(),
-        avatar: avatarDefault,
+        avatar: dadosPerfil?.imagemPerfil || avatarDefault,
       },
     ]);
     setNovoComentario("");
@@ -97,10 +123,15 @@ export const DetalhesPost = ({ onVoltar, onVerComentarios, post, aoCurtirPost })
 
               {/* Autor */}
               <View style={DetalhePostStyles.authorRow}>
-                {typeof postAvatar === "string" ? (
+                {typeof postAvatar === "object" && postAvatar?.uri ? (
+                  <Image source={{ uri: postAvatar.uri }} style={DetalhePostStyles.avatar} />
+                ) : typeof postAvatar === "string" && (postAvatar.startsWith("http") || postAvatar.startsWith("blob:") || postAvatar.startsWith("data:")) ? (
                   <Image source={{ uri: postAvatar }} style={DetalhePostStyles.avatar} />
                 ) : (
-                  <Image source={postAvatar} style={DetalhePostStyles.avatar} />
+                  <Image
+                    source={typeof postAvatar === "number" || typeof postAvatar === "object" ? postAvatar : avatarDefault}
+                    style={DetalhePostStyles.avatar}
+                  />
                 )}
                 <View style={DetalhePostStyles.authorInfo}>
                   <Text style={DetalhePostStyles.authorName}>{autorNome}</Text>
@@ -110,22 +141,30 @@ export const DetalhesPost = ({ onVoltar, onVerComentarios, post, aoCurtirPost })
               </View>
 
               {/* Texto do Post */}
-              <Text style={DetalhePostStyles.postText}>
-                {postTexto}
-              </Text>
+              {Boolean(postTexto) && (
+                <Text style={DetalhePostStyles.postText}>
+                  {postTexto}
+                </Text>
+              )}
 
-              {/* Imagem do Post */}
-              {postImagem && (
+              {/* Imagem do Post (renderizada apenas se existir imagem real no post) */}
+              {Boolean(rawImagem) && (
                 <View style={DetalhePostStyles.imageContainer}>
-                  {typeof postImagem === "string" ? (
+                  {typeof rawImagem === "object" && rawImagem?.uri ? (
                     <Image
-                      source={{ uri: postImagem }}
+                      source={{ uri: rawImagem.uri }}
+                      style={DetalhePostStyles.postImage}
+                      resizeMode="cover"
+                    />
+                  ) : typeof rawImagem === "string" && (rawImagem.startsWith("http") || rawImagem.startsWith("blob:") || rawImagem.startsWith("data:")) ? (
+                    <Image
+                      source={{ uri: rawImagem }}
                       style={DetalhePostStyles.postImage}
                       resizeMode="cover"
                     />
                   ) : (
                     <Image
-                      source={postImagem}
+                      source={typeof rawImagem === "number" || typeof rawImagem === "object" ? rawImagem : null}
                       style={DetalhePostStyles.postImage}
                       resizeMode="cover"
                     />
@@ -173,14 +212,9 @@ export const DetalhesPost = ({ onVoltar, onVerComentarios, post, aoCurtirPost })
               {mostrarComentarios && (
                 <View style={DetalhePostStyles.commentsContainer}>
                   {comentarios.map((c, index) => {
-                    const avatarFonte = c.avatar || (c.autor === 'Eduardo Torolho' ? avatarEduardo : avatarDefault);
                     return (
                       <View key={c.id || index} style={[DetalhePostStyles.commentItem, { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 10 }]}>
-                        {typeof avatarFonte === 'string' ? (
-                          <Image source={{ uri: avatarFonte }} style={{ width: 32, height: 32, borderRadius: 16 }} resizeMode="cover" />
-                        ) : (
-                          <Image source={avatarFonte} style={{ width: 32, height: 32, borderRadius: 16 }} resizeMode="cover" />
-                        )}
+                        <Image source={avatarDefault} style={{ width: 32, height: 32, borderRadius: 16 }} resizeMode="cover" />
                         <View style={{ flex: 1 }}>
                           <Text style={DetalhePostStyles.commentAuthor}>{c.autor || c.nome}</Text>
                           <Text style={DetalhePostStyles.commentBody}>{c.texto}</Text>

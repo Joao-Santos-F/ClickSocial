@@ -28,7 +28,7 @@ const POSTS_PADRAO = [
     time: "Há 2 horas",
     text: "Acabei de publicar um novo conteúdo no canal! Vamos juntos explorar novas ideias e aprender coisas novas.",
     accent: "#5ef9d6",
-    avatar: require("../../../assets/Gemini_Generated_Image_1rfyg1rfyg1rfyg1.png"),
+    avatar: require("../../../assets/WhatsApp Image 2026-08-25 at 11.25.57 2.png"),
     image: require("../../../assets/12 Sem Título_20260828133808.jpg"),
     curtidas: 1900,
     curtido: false,
@@ -42,7 +42,7 @@ const POSTS_PADRAO = [
     time: "Ontem",
     text: "Só eu que acho que o @Arthurbr-YT é uma mona chata? Tipo é, tipo an, tipo nada havê",
     accent: "#74f7c7",
-    avatar: require("../../../assets/Gemini_Generated_Image_1rfyg1rfyg1rfyg1.png"),
+    avatar: require("../../../assets/WhatsApp Image 2026-08-25 at 11.25.57 2.png"),
     image: require("../../../assets/1212.jpg"),
     curtidas: 840,
     curtido: false,
@@ -192,14 +192,19 @@ export default function Feed({
               <View key={post.id} style={Feedstyles.PostCard}>
                 <View style={Feedstyles.PostHeader}>
                   <View style={Feedstyles.AvatarWrap}>
-                    {post.avatar ? (
-                      typeof post.avatar === "string" ? (
-                        <Image source={{ uri: post.avatar }} style={Feedstyles.AvatarImage} />
-                      ) : (
-                        <Image source={post.avatar} style={Feedstyles.AvatarImage} />
-                      )
+                    {typeof post.avatar === "object" && post.avatar?.uri ? (
+                      <Image source={{ uri: post.avatar.uri }} style={Feedstyles.AvatarImage} />
+                    ) : typeof post.avatar === "string" && (post.avatar.startsWith("http") || post.avatar.startsWith("blob:")) ? (
+                      <Image source={{ uri: post.avatar }} style={Feedstyles.AvatarImage} />
                     ) : (
-                      <View style={Feedstyles.AvatarInner} />
+                      <Image
+                        source={
+                          typeof post.avatar === "number" || typeof post.avatar === "object"
+                            ? post.avatar
+                            : require("../../../assets/WhatsApp Image 2026-08-25 at 11.25.57 2.png")
+                        }
+                        style={Feedstyles.AvatarImage}
+                      />
                     )}
                   </View>
 
@@ -260,7 +265,7 @@ export default function Feed({
                   >
                     <IconeMensagemFeed tamanho={20} cor="#9CA3AF" />
                     <Text style={Feedstyles.ActionText}>
-                      {post.comentariosCount || (post.comentarios ? post.comentarios.length : 0)}
+                      {Array.isArray(post.comentarios) ? post.comentarios.length : (post.comentariosCount || 0)}
                     </Text>
                   </TouchableOpacity>
 
@@ -280,7 +285,7 @@ export default function Feed({
                         post.republicado && { color: "#00C853", fontWeight: "700" },
                       ]}
                     >
-                      {post.repostsCount || (post.republicado ? 1 : 0)}
+                      {Array.isArray(post.republicadores) ? post.republicadores.length : (post.repostsCount || 0)}
                     </Text>
                   </TouchableOpacity>
 

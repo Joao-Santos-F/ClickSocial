@@ -19,13 +19,17 @@ export function CampoFoto({ rotulo = "Foto de Perfil", textoAjuda = "Insira sua 
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.8,
+      base64: true,
     });
 
     if (!result.canceled && result.assets && result.assets.length > 0) {
-      const uri = result.assets[0].uri;
-      setImagemUri(uri);
+      const asset = result.assets[0];
+      const uriPermanente = asset.base64
+        ? `data:image/jpeg;base64,${asset.base64}`
+        : asset.uri;
+      setImagemUri(uriPermanente);
       if (aoSelecionarFoto) {
-        aoSelecionarFoto(uri);
+        aoSelecionarFoto(uriPermanente);
       }
     }
   };

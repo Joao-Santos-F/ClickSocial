@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   View,
   Text,
-  TextInput,
+  Image,
   TouchableOpacity,
   StyleSheet,
   Alert,
@@ -15,6 +15,8 @@ import {
   MascoteVerde,
 } from "./IconesSvg";
 
+import { useApi } from "../context/ApiContext";
+
 const DESTAQUES = [
   { id: "1", rotulo: "Highlights 1" },
   { id: "2", rotulo: "Highlights 2" },
@@ -23,7 +25,9 @@ const DESTAQUES = [
   { id: "5", rotulo: "Highlights 5" },
 ];
 
-export function ProfileHeader({ onEditPress, onVoltarPress, dadosPerfil }) {
+export function ProfileHeader({ onEditPress, onVoltarPress, dadosPerfil, postsCount = 0 }) {
+  const { usuarioLogado, usuarios = [] } = useApi();
+
   const lidarComVoltar = () => {
     if (onVoltarPress) {
       onVoltarPress();
@@ -46,48 +50,88 @@ export function ProfileHeader({ onEditPress, onVoltarPress, dadosPerfil }) {
     Alert.alert("Destaque", `Abrindo story em destaque #${id}`);
   };
 
-  const lidarComAvatar = () => {
-    Alert.alert("Foto de Perfil", "Opção de trocar imagem de perfil (Demonstração).");
+  const renderAvatarImage = () => {
+    let img =
+      dadosPerfil?.imagemPerfil ||
+      dadosPerfil?.fotoUri ||
+      usuarioLogado?.fotoUri ||
+      usuarioLogado?.imagemPerfil;
+
+    if (!img && usuarioLogado) {
+      const match = usuarios.find(
+        (u) => (u.usuario || "").toLowerCase() === (usuarioLogado.usuario || "").toLowerCase()
+      );
+      if (match?.fotoUri) img = match.fotoUri;
+      else if (match?.imagemPerfil) img = match.imagemPerfil;
+    }
+
+    if (img) {
+      let uriStr = typeof img === "object" ? img?.uri : img;
+
+      if (typeof uriStr === "string") {
+        if (uriStr.includes("WhatsApp")) {
+          return <Image source={require("../../assets/WhatsApp Image 2026-08-25 at 11.25.57 2.png")} style={styles.avatarImage} resizeMode="cover" />;
+        }
+        if (uriStr.includes("top amigo")) {
+          return <Image source={require("../../assets/top amigo 2.png")} style={styles.avatarImage} resizeMode="cover" />;
+        }
+        if (uriStr.startsWith("data:") || uriStr.startsWith("http") || uriStr.startsWith("blob:")) {
+          return <Image source={{ uri: uriStr }} style={styles.avatarImage} resizeMode="cover" />;
+        }
+      }
+      if (typeof img === "number" || typeof img === "object") {
+        return <Image source={img} style={styles.avatarImage} resizeMode="cover" />;
+      }
+    }
+
+    return <Image source={require("../../assets/WhatsApp Image 2026-08-25 at 11.25.57 2.png")} style={styles.avatarImage} resizeMode="cover" />;
   };
+
+  const ehVerificado = Boolean(dadosPerfil?.verificado);
+  const totalPosts = postsCount ?? (dadosPerfil?.postsCount || 0);
+  const seguidores = dadosPerfil?.seguidores ?? 0;
+  const seguindo = dadosPerfil?.seguindo ?? 0;
 
   return (
     <View style={styles.cartao}>
       {/* Linha superior: Avatar + Info + Botão Voltar */}
       <View style={styles.linhaTopoContainer}>
-        {/* Avatar Circular Interativo com borda */}
+        {/* Avatar Circular Interativo com foto dinâmica */}
         <TouchableOpacity
-          onPress={lidarComAvatar}
+          onPress={lidarComEditar}
           activeOpacity={0.8}
           style={styles.avatarWrapper}
         >
-          <MascoteVerde tamanho={72} />
+          {renderAvatarImage()}
         </TouchableOpacity>
 
         {/* Informações: Nome + Badge + Estatísticas */}
         <View style={styles.infoContainer}>
           <View style={styles.linhaNome}>
             <Text style={styles.nomeTexto}>
-              {dadosPerfil?.nome || dadosPerfil?.usuario || "Arthurbr-YT"}
+              {dadosPerfil?.nome || dadosPerfil?.usuario || "Usuário"}
             </Text>
-            <View style={styles.badgeContainer}>
-              <IconeVerificado tamanho={18} cor="#110D20" />
-            </View>
+            {ehVerificado && (
+              <View style={styles.badgeContainer}>
+                <IconeVerificado tamanho={18} cor="#110D20" />
+              </View>
+            )}
           </View>
 
-          {/* Estatísticas com sublinhado/linha */}
+          {/* Estatísticas Dinâmicas */}
           <View style={styles.estatisticasContainer}>
             <TouchableOpacity activeOpacity={0.7} style={styles.estatisticaItem}>
-              <Text style={styles.estatisticaNumero}>69</Text>
+              <Text style={styles.estatisticaNumero}>{totalPosts}</Text>
               <Text style={styles.estatisticaRotulo}>Post</Text>
               <View style={styles.linhaSublinhada} />
             </TouchableOpacity>
             <TouchableOpacity activeOpacity={0.7} style={styles.estatisticaItem}>
-              <Text style={styles.estatisticaNumero}>26,2K</Text>
+              <Text style={styles.estatisticaNumero}>{seguidores}</Text>
               <Text style={styles.estatisticaRotulo}>Seguidores</Text>
               <View style={styles.linhaSublinhada} />
             </TouchableOpacity>
             <TouchableOpacity activeOpacity={0.7} style={styles.estatisticaItem}>
-              <Text style={styles.estatisticaNumero}>17</Text>
+              <Text style={styles.estatisticaNumero}>{seguindo}</Text>
               <Text style={styles.estatisticaRotulo}>Seguindo</Text>
               <View style={styles.linhaSublinhada} />
             </TouchableOpacity>
@@ -106,7 +150,7 @@ export function ProfileHeader({ onEditPress, onVoltarPress, dadosPerfil }) {
         </TouchableOpacity>
       </View>
 
-      {/* Caixa de Bio Estática */}
+      {/* Caixa de Bio */}
       <View style={styles.bioContainer}>
         <Text style={styles.bioInput} numberOfLines={2} ellipsizeMode="tail">
           {dadosPerfil?.bio || "Criador de conteúdo e explorador de ideias."}
@@ -131,7 +175,7 @@ export function ProfileHeader({ onEditPress, onVoltarPress, dadosPerfil }) {
         </TouchableOpacity>
       </View>
 
-      {/* 5 Círculos de Destaques Interativos */}
+      {/* 5 Círculos de Destaques Interativos (Avatar do Usuário) */}
       <View style={styles.destaquesContainer}>
         {DESTAQUES.map((item) => (
           <TouchableOpacity
@@ -140,7 +184,7 @@ export function ProfileHeader({ onEditPress, onVoltarPress, dadosPerfil }) {
             activeOpacity={0.7}
             onPress={() => lidarComDestaque(item.id)}
           >
-            <IconeDestaque tamanho={30} />
+            {renderAvatarImage()}
           </TouchableOpacity>
         ))}
       </View>
@@ -175,6 +219,11 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: "#211645",
+  },
+  avatarImage: {
+    width: "100%",
+    height: "100%",
   },
   infoContainer: {
     flex: 1,
@@ -259,18 +308,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: theme.colors.cardBackground,
   },
-  botaoAcaoAtivo: {
-    backgroundColor: theme.colors.buttonPrimary,
-    borderColor: theme.colors.buttonPrimary,
-  },
   botaoAcaoTexto: {
     fontSize: 13,
     fontWeight: "500",
     color: theme.colors.textSecondary,
-  },
-  botaoAcaoTextoAtivo: {
-    color: theme.colors.buttonPrimaryText,
-    fontWeight: "700",
   },
   destaquesContainer: {
     flexDirection: "row",
