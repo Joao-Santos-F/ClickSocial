@@ -1,11 +1,30 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { Platform } from "react-native";
+import Constants from "expo-constants";
 
-// URL Base flexível conforme o ambiente (Web, Android ou iOS)
+// URL Base flexível conforme o ambiente (Web, Android, iOS ou Dispositivo Físico)
 const getApiBaseUrl = () => {
+  if (Platform.OS === "web") {
+    return "http://localhost:3000";
+  }
+
+  // Obter IP local da máquina de desenvolvimento dinamicamente via Expo Constants
+  const hostUri =
+    Constants.expoConfig?.hostUri ||
+    Constants.manifest?.debuggerHost ||
+    Constants.manifest2?.extra?.expoGo?.developer?.inputs?.[0]?.url;
+
+  if (hostUri) {
+    const ip = hostUri.split(":")[0];
+    if (ip && ip !== "localhost" && ip !== "127.0.0.1") {
+      return `http://${ip}:3000`;
+    }
+  }
+
   if (Platform.OS === "android") {
     return "http://10.0.2.2:3000";
   }
+
   return "http://localhost:3000";
 };
 
@@ -425,6 +444,7 @@ export const ApiProvider = ({ children }) => {
           });
         }
         setIsOnline(true);
+        console.log(`[ApiContext] Servidor json-server ONLINE em: ${API_BASE_URL}`);
       } else {
         setIsOnline(false);
       }
@@ -553,7 +573,7 @@ export const ApiProvider = ({ children }) => {
       });
       setIsOnline(true);
     } catch (e) {
-      console.error("Erro ao salvar novo usuário na API:", e);
+      console.log("[ApiContext] Servidor json-server offline ao cadastrar usuário (usando modo local).");
     }
 
     adicionarNotificacao({
@@ -594,7 +614,7 @@ export const ApiProvider = ({ children }) => {
         body: JSON.stringify(novaNotif),
       });
     } catch (e) {
-      console.error("Erro ao salvar notificação na API", e);
+      console.log("[ApiContext] Servidor json-server offline ao salvar notificação (usando modo local).");
     }
   };
 
@@ -653,7 +673,7 @@ export const ApiProvider = ({ children }) => {
           }),
         });
       } catch (e) {
-        console.error("Erro ao atualizar curtida na API", e);
+        console.log("[ApiContext] Servidor json-server offline ao atualizar curtida (usando modo local).");
       }
     }
   };
@@ -713,7 +733,7 @@ export const ApiProvider = ({ children }) => {
           }),
         });
       } catch (e) {
-        console.error("Erro ao atualizar republicação na API", e);
+        console.log("[ApiContext] Servidor json-server offline ao atualizar republicação (usando modo local).");
       }
     }
   };
@@ -768,7 +788,7 @@ export const ApiProvider = ({ children }) => {
         }),
       });
     } catch (e) {
-      console.error("Erro ao criar post na API", e);
+      console.log("[ApiContext] Servidor json-server offline ao criar post (usando modo local).");
     }
   };
 
@@ -843,7 +863,7 @@ export const ApiProvider = ({ children }) => {
           }),
         });
       } catch (e) {
-        console.error("Erro ao adicionar comentário na API", e);
+        console.log("[ApiContext] Servidor json-server offline ao adicionar comentário (usando modo local).");
       }
     }
 
@@ -886,7 +906,7 @@ export const ApiProvider = ({ children }) => {
           }),
         });
       } catch (e) {
-        console.error("Erro ao curtir comentário na API", e);
+        console.log("[ApiContext] Servidor json-server offline ao curtir comentário (usando modo local).");
       }
     }
 
@@ -971,7 +991,7 @@ export const ApiProvider = ({ children }) => {
         }),
       });
     } catch (e) {
-      console.error("Erro ao atualizar perfil na API", e);
+      console.log("[ApiContext] Servidor json-server offline ao atualizar perfil (usando modo local).");
     }
   };
 

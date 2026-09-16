@@ -12,6 +12,7 @@
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-native": "0.86.3",
+    "react-native-safe-area-context": "^5.9.1",
     "react-native-svg": "15.15.4",
     "react-native-web": "^0.21.2"
   },
@@ -20,7 +21,7 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "server": "json-server --watch db.json --port 3000"
+    "server": "json-server --watch db.json --port 3000 --host 0.0.0.0"
   },
   "devDependencies": {
     "json-server": "^1.0.0-beta.3"

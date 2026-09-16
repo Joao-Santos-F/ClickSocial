@@ -1,4 +1,5 @@
-import { View, Text, TextInput, Image, TouchableOpacity, ScrollView, SafeAreaView, Platform, StatusBar } from 'react-native';
+import { View, Text, TextInput, Image, TouchableOpacity, ScrollView, Platform, StatusBar } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import NavegacaoInferior from '../../components/NavegacaoInferior';

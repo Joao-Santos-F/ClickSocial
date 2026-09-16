@@ -3,10 +3,10 @@ import {
   View,
   ScrollView,
   StyleSheet,
-  SafeAreaView,
   Platform,
   StatusBar as RNStatusBar,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { theme } from "../styles/theme";
 import { ProfileHeader } from "../components/ProfileHeader";

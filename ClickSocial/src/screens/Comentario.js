@@ -7,8 +7,8 @@ import {
   TouchableOpacity,
   Image,
   ScrollView,
-  SafeAreaView,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import avatarEduardo from '../../assets/top amigo 2.png';
 import avatarDefault from '../../assets/WhatsApp Image 2026-08-25 at 11.25.57 2.png';

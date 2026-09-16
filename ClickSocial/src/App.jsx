@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { View, SafeAreaView } from "react-native";
+import { View } from "react-native";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { ApiProvider, useApi } from "./context/ApiContext";
 import BoasVindasScreen from "./screens/BoasVindasScreen";
 import LoginScreen from "./screens/LoginScreen";
@@ -250,8 +251,10 @@ function AppContent() {
 
 export default function App() {
   return (
-    <ApiProvider>
-      <AppContent />
-    </ApiProvider>
+    <SafeAreaProvider>
+      <ApiProvider>
+        <AppContent />
+      </ApiProvider>
+    </SafeAreaProvider>
   );
 }

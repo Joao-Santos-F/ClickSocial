@@ -5,10 +5,10 @@ import {
   View,
   Image,
   TouchableOpacity,
-  SafeAreaView,
   Platform,
   StatusBar as RNStatusBar,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Feedstyles } from "./feedStyle";
 import NavegacaoInferior from "../../components/NavegacaoInferior";
