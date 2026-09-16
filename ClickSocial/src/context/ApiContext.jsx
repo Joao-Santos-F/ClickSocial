@@ -114,13 +114,79 @@ const DADOS_INICIAIS = {
   },
 };
 
-// Auxiliar de ordenação cronológica inversa (mais novos no topo)
+// Auxiliar de ordenação cronológica inversa de posts (mais novos no topo)
 const ordenarPostsPorData = (listaPosts) => {
   return [...listaPosts].sort((a, b) => {
     const timestampA = Number(a.createdAt) || (Number(a.id) > 1000000 ? Number(a.id) : 0);
     const timestampB = Number(b.createdAt) || (Number(b.id) > 1000000 ? Number(b.id) : 0);
     return timestampB - timestampA;
   });
+};
+
+// Extrai timestamp numérico preciso de qualquer notificação, mesmo sem createdAt explícito
+export const extrairTimestampNotificacao = (notif, index = 0) => {
+  if (!notif) return 0;
+
+  if (notif.createdAt && Number(notif.createdAt) > 0) {
+    return Number(notif.createdAt);
+  }
+
+  const idNum = Number(notif.id);
+  if (!isNaN(idNum) && idNum > 1000000000000) {
+    return idNum;
+  }
+
+  const horarioStr = String(notif.horario || "").trim().toLowerCase();
+  const agora = Date.now();
+
+  if (horarioStr.includes("agora") || horarioStr.includes("segundo")) {
+    // Notificações criadas na sessão atual: preserva ordem de inserção dando prioridade máxima
+    return agora - 5000 + (Number(index) || 0) * 10;
+  }
+
+  const matchMin = horarioStr.match(/(\d+)\s*min/);
+  if (matchMin) {
+    const mins = parseInt(matchMin[1], 10);
+    return agora - mins * 60 * 1000;
+  }
+
+  const matchHora = horarioStr.match(/(\d+)\s*hora/);
+  if (matchHora) {
+    const hrs = parseInt(matchHora[1], 10);
+    return agora - hrs * 3600 * 1000;
+  }
+
+  if (horarioStr.includes("ontem")) {
+    return agora - 86400 * 1000;
+  }
+
+  // Formato horário HH:MM (ex: "10:38")
+  const matchHoraMin = horarioStr.match(/^(\d{1,2}):(\d{2})$/);
+  if (matchHoraMin) {
+    const h = parseInt(matchHoraMin[1], 10);
+    const m = parseInt(matchHoraMin[2], 10);
+    const d = new Date();
+    d.setHours(h, m, 0, 0);
+    return d.getTime();
+  }
+
+  // Notificações fixas pré-definidas
+  if (notif.id === "n1" || notif.id === "1") return agora - 10 * 60 * 1000;
+  if (notif.id === "n2" || notif.id === "2") return agora - 25 * 60 * 1000;
+  if (notif.id === "n3" || notif.id === "3") return agora - 60 * 60 * 1000;
+  if (notif.id === "n4" || notif.id === "4") return agora - 75 * 60 * 1000;
+  if (notif.id === "n5" || notif.id === "5") return agora - 90 * 60 * 1000;
+
+  return agora - 86400 * 1000 + (Number(index) || 0) * 1000;
+};
+
+// Auxiliar para ordenar notificações cronologicamente (mais novas no topo)
+export const ordenarNotificacoesPorData = (lista) => {
+  if (!Array.isArray(lista)) return [];
+  return [...lista]
+    .map((item, idx) => ({ ...item, _tempTs: extrairTimestampNotificacao(item, idx) }))
+    .sort((a, b) => b._tempTs - a._tempTs)
+    .map(({ _tempTs, ...item }) => item);
 };
 
 const ApiContext = createContext();
@@ -348,7 +414,7 @@ export const ApiProvider = ({ children }) => {
         const postsProcessados = postsData.map((p) => processarPostServidor(p, usuarioAtualizadoRef));
         setPosts(ordenarPostsPorData(postsProcessados));
 
-        setNotificacoes(notifData);
+        setNotificacoes(ordenarNotificacoesPorData(Array.isArray(notifData) ? notifData : []));
         if (perfilData && perfilData.usuario && !usuarioAtualizadoRef) {
           setDadosPerfil({
             ...perfilData,
@@ -508,16 +574,18 @@ export const ApiProvider = ({ children }) => {
 
   // Adicionar notificação
   const adicionarNotificacao = async ({ tipo, usuario = "Você", texto, postId = null }) => {
+    const agora = Date.now();
     const novaNotif = {
-      id: String(Date.now() + Math.random()),
+      id: String(agora + Math.random()),
       tipo,
       usuario,
       texto,
       horario: "Agora",
+      createdAt: agora,
       postId,
     };
 
-    setNotificacoes((prev) => [novaNotif, ...prev]);
+    setNotificacoes((prev) => ordenarNotificacoesPorData([novaNotif, ...prev]));
 
     try {
       await fetch(`${API_BASE_URL}/notificacoes`, {

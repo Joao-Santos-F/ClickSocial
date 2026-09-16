@@ -15,6 +15,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { theme } from "../styles/theme";
 import NavegacaoInferior from "../components/NavegacaoInferior";
 import { IconeMensagemFeed, IconeTabRepost, IconeLogoFeed } from "../components/IconesSvg";
+import { ordenarNotificacoesPorData } from "../context/ApiContext";
 import iconCoracao from "../../assets/incon_coracao.png";
 import iconSeguidor from "../../assets/incon_seguidor.png";
 
@@ -70,7 +71,10 @@ export default function NotificacoesScreen({
   notificacoesLista,
 }) {
   const lidarNavegacao = aoMudarTela || aoNavegarAba;
-  const listaNotificacoes = notificacoesLista || notificacoes || NOTIFICACOES_PADRAO;
+  const listaBruta = notificacoesLista || notificacoes || NOTIFICACOES_PADRAO;
+  const listaNotificacoes = React.useMemo(() => {
+    return ordenarNotificacoesPorData(listaBruta);
+  }, [listaBruta]);
 
   const lidarCliqueNotificacao = (item) => {
     if (!lidarNavegacao) return;
