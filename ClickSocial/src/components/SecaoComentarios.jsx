@@ -34,23 +34,41 @@ export function SecaoComentarios({ postsCompartilhados = [], dadosPerfil: dadosP
     const autor = (c.autor || c.nome || "").trim().toLowerCase();
     const handle = (c.handle || "").trim().toLowerCase();
 
-    // 1. Autor é o perfil sendo exibido (prioridade máxima para refletir alteração de foto em tempo real)
+    // Auxiliar: resolve uma fonte de imagem para um formato aceito pelo Image component
+    const resolverImg = (img) => {
+      if (!img) return null;
+      if (typeof img === "number") return img; // require()
+      if (typeof img === "string") {
+        if (img.startsWith("data:") || img.startsWith("http") || img.startsWith("blob:")) {
+          return { uri: img };
+        }
+        if (img.includes("top amigo")) return avatarEduardo;
+        if (img.includes("WhatsApp")) return avatarPadrao;
+        return null;
+      }
+      if (typeof img === "object" && img !== null) {
+        const uri = img.uri;
+        if (typeof uri === "string" && uri.length > 0) {
+          if (uri.startsWith("data:") || uri.startsWith("http") || uri.startsWith("blob:")) {
+            return { uri };
+          }
+          if (uri.includes("top amigo")) return avatarEduardo;
+          if (uri.includes("WhatsApp")) return avatarPadrao;
+        }
+      }
+      return null;
+    };
+
+    // 1. Autor é o perfil sendo exibido (prioridade máxima)
     if (
       (userHandle && (autor === userHandle || handle === userHandle)) ||
       (userNome && (autor === userNome || handle === userNome)) ||
       autor === "você"
     ) {
-      if (dadosPerfil?.fotoUri) return { uri: dadosPerfil.fotoUri };
-      if (dadosPerfil?.imagemPerfil) {
-        if (typeof dadosPerfil.imagemPerfil === "string") {
-          if (dadosPerfil.imagemPerfil.startsWith("data:") || dadosPerfil.imagemPerfil.startsWith("http") || dadosPerfil.imagemPerfil.startsWith("blob:")) {
-            return { uri: dadosPerfil.imagemPerfil };
-          }
-          if (dadosPerfil.imagemPerfil.includes("top amigo")) return avatarEduardo;
-          if (dadosPerfil.imagemPerfil.includes("WhatsApp")) return avatarPadrao;
-        }
-        return dadosPerfil.imagemPerfil;
-      }
+      const src =
+        resolverImg(dadosPerfil?.fotoUri) ||
+        resolverImg(dadosPerfil?.imagemPerfil);
+      if (src) return src;
     }
 
     // 2. Autor é o usuário atualmente logado
@@ -59,17 +77,10 @@ export function SecaoComentarios({ postsCompartilhados = [], dadosPerfil: dadosP
       ((usuarioLogado.usuario && autor === usuarioLogado.usuario.toLowerCase()) ||
        (usuarioLogado.nome && autor === usuarioLogado.nome.toLowerCase()))
     ) {
-      if (usuarioLogado.fotoUri) return { uri: usuarioLogado.fotoUri };
-      if (usuarioLogado.imagemPerfil) {
-        if (typeof usuarioLogado.imagemPerfil === "string") {
-          if (usuarioLogado.imagemPerfil.startsWith("data:") || usuarioLogado.imagemPerfil.startsWith("http")) {
-            return { uri: usuarioLogado.imagemPerfil };
-          }
-          if (usuarioLogado.imagemPerfil.includes("top amigo")) return avatarEduardo;
-          if (usuarioLogado.imagemPerfil.includes("WhatsApp")) return avatarPadrao;
-        }
-        return usuarioLogado.imagemPerfil;
-      }
+      const src =
+        resolverImg(usuarioLogado.fotoUri) ||
+        resolverImg(usuarioLogado.imagemPerfil);
+      if (src) return src;
     }
 
     // 3. Busca o autor na lista global de usuários cadastrados
@@ -81,29 +92,16 @@ export function SecaoComentarios({ postsCompartilhados = [], dadosPerfil: dadosP
     );
 
     if (usuarioEncontrado) {
-      if (usuarioEncontrado.fotoUri) return { uri: usuarioEncontrado.fotoUri };
-      if (usuarioEncontrado.imagemPerfil) {
-        if (typeof usuarioEncontrado.imagemPerfil === "string") {
-          if (usuarioEncontrado.imagemPerfil.startsWith("data:") || usuarioEncontrado.imagemPerfil.startsWith("http")) {
-            return { uri: usuarioEncontrado.imagemPerfil };
-          }
-          if (usuarioEncontrado.imagemPerfil.includes("top amigo")) return avatarEduardo;
-          if (usuarioEncontrado.imagemPerfil.includes("WhatsApp")) return avatarPadrao;
-        }
-        return usuarioEncontrado.imagemPerfil;
-      }
+      const src =
+        resolverImg(usuarioEncontrado.fotoUri) ||
+        resolverImg(usuarioEncontrado.imagemPerfil);
+      if (src) return src;
     }
 
-    // 4. Se o próprio comentário já possui avatar gravado
+    // 4. Avatar gravado diretamente no comentário
     if (c.avatar) {
-      if (typeof c.avatar === "string") {
-        if (c.avatar.startsWith("data:") || c.avatar.startsWith("http") || c.avatar.startsWith("blob:")) {
-          return { uri: c.avatar };
-        }
-        if (c.avatar.includes("top amigo")) return avatarEduardo;
-        if (c.avatar.includes("WhatsApp")) return avatarPadrao;
-      }
-      return c.avatar;
+      const src = resolverImg(c.avatar);
+      if (src) return src;
     }
 
     return avatarPadrao;

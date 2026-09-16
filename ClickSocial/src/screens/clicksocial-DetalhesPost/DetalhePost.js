@@ -92,7 +92,14 @@ export const DetalhePostStyles = StyleSheet.create({
     fontWeight: "bold",
     color: "#1B172B",
     lineHeight: 22,
-    marginBottom: 16,
+    marginBottom: 6,
+  },
+
+  locationText: {
+    fontSize: 13,
+    color: "#6E6A82",
+    marginBottom: 14,
+    fontWeight: "500",
   },
 
   imageContainer: {

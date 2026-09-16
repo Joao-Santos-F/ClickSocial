@@ -197,6 +197,7 @@ export const CriarPost = ({ onVoltar, onPublicarSucesso, dadosPerfil }) => {
       accent: "#5ef9d6",
       avatar: avatarPostAtual,
       image: imagem ? imagem.uri : null,
+      localizacao: localizacao || null,
       curtidas: 0,
       curtido: false,
       comentariosCount: 0,

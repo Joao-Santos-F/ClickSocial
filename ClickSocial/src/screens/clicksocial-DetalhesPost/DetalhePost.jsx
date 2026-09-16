@@ -50,6 +50,7 @@ export const DetalhesPost = ({ onVoltar, onVerComentarios, post, aoCurtirPost })
   const autorTime = post?.time || post?.tempo || "Agora";
   const postTexto = post?.text || post?.texto || "";
   const rawImagem = post?.image || post?.imagem || null;
+  const localizacao = post?.localizacao || null;
 
   // Resolver foto real do autor do post
   const autorMatch = usuarios.find(
@@ -186,6 +187,13 @@ export const DetalhesPost = ({ onVoltar, onVerComentarios, post, aoCurtirPost })
               {Boolean(postTexto) && (
                 <Text style={DetalhePostStyles.postText}>
                   {postTexto}
+                </Text>
+              )}
+
+              {/* Localização do Post */}
+              {Boolean(localizacao) && (
+                <Text style={DetalhePostStyles.locationText}>
+                  📍 {localizacao}
                 </Text>
               )}
 
