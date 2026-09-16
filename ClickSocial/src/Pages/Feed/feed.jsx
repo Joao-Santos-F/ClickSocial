@@ -154,6 +154,34 @@ export default function Feed({
     }
   };
 
+  const renderAvatarPost = (avatar) => {
+    if (!avatar) {
+      return <Image source={require("../../../assets/WhatsApp Image 2026-08-25 at 11.25.57 2.png")} style={Feedstyles.AvatarImage} />;
+    }
+
+    if (typeof avatar === "object" && avatar?.uri) {
+      return <Image source={{ uri: avatar.uri }} style={Feedstyles.AvatarImage} />;
+    }
+
+    if (typeof avatar === "string") {
+      if (avatar.startsWith("data:") || avatar.startsWith("http") || avatar.startsWith("blob:")) {
+        return <Image source={{ uri: avatar }} style={Feedstyles.AvatarImage} />;
+      }
+      if (avatar.includes("top amigo")) {
+        return <Image source={require("../../../assets/top amigo 2.png")} style={Feedstyles.AvatarImage} />;
+      }
+      if (avatar.includes("WhatsApp Image")) {
+        return <Image source={require("../../../assets/WhatsApp Image 2026-08-25 at 11.25.57 2.png")} style={Feedstyles.AvatarImage} />;
+      }
+    }
+
+    if (typeof avatar === "number") {
+      return <Image source={avatar} style={Feedstyles.AvatarImage} />;
+    }
+
+    return <Image source={require("../../../assets/WhatsApp Image 2026-08-25 at 11.25.57 2.png")} style={Feedstyles.AvatarImage} />;
+  };
+
   const alturaStatusBar = Platform.OS === "android" ? RNStatusBar.currentHeight || 24 : 0;
 
   return (
@@ -192,20 +220,7 @@ export default function Feed({
               <View key={post.id} style={Feedstyles.PostCard}>
                 <View style={Feedstyles.PostHeader}>
                   <View style={Feedstyles.AvatarWrap}>
-                    {typeof post.avatar === "object" && post.avatar?.uri ? (
-                      <Image source={{ uri: post.avatar.uri }} style={Feedstyles.AvatarImage} />
-                    ) : typeof post.avatar === "string" && (post.avatar.startsWith("http") || post.avatar.startsWith("blob:")) ? (
-                      <Image source={{ uri: post.avatar }} style={Feedstyles.AvatarImage} />
-                    ) : (
-                      <Image
-                        source={
-                          typeof post.avatar === "number" || typeof post.avatar === "object"
-                            ? post.avatar
-                            : require("../../../assets/WhatsApp Image 2026-08-25 at 11.25.57 2.png")
-                        }
-                        style={Feedstyles.AvatarImage}
-                      />
-                    )}
+                    {renderAvatarPost(post.avatar)}
                   </View>
 
                   <View style={Feedstyles.UserTextWrap}>

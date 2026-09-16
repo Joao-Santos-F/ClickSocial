@@ -103,16 +103,26 @@ export default function Comentario({ onBack, onVoltar, post, aoCurtirComentario,
   };
 
   const resolverAvatarAutor = (item) => {
-    const nomeAutor = item.autor || item.nome || '';
+    const nomeAutor = (item.autor || item.nome || '').trim();
     
-    // 1. Procura se o autor é o usuário atualmente logado (dadosPerfil)
+    // 1. Procura se o autor é o usuário atualmente logado (dadosPerfil ou usuarioLogado)
     if (
       dadosPerfil &&
       (nomeAutor.toLowerCase() === (dadosPerfil.usuario || '').toLowerCase() ||
        nomeAutor.toLowerCase() === (dadosPerfil.nome || '').toLowerCase() ||
-       nomeAutor === 'Você')
+       nomeAutor.toLowerCase() === 'você')
     ) {
-      if (dadosPerfil.imagemPerfil) return dadosPerfil.imagemPerfil;
+      if (dadosPerfil.fotoUri) return { uri: dadosPerfil.fotoUri };
+      if (dadosPerfil.imagemPerfil) {
+        if (typeof dadosPerfil.imagemPerfil === 'string') {
+          if (dadosPerfil.imagemPerfil.startsWith('data:') || dadosPerfil.imagemPerfil.startsWith('http') || dadosPerfil.imagemPerfil.startsWith('blob:')) {
+            return { uri: dadosPerfil.imagemPerfil };
+          }
+          if (dadosPerfil.imagemPerfil.includes('top amigo')) return avatarEduardo;
+          if (dadosPerfil.imagemPerfil.includes('WhatsApp')) return avatarDefault;
+        }
+        return dadosPerfil.imagemPerfil;
+      }
     }
 
     // 2. Procura o autor na lista global de usuários
@@ -129,7 +139,9 @@ export default function Comentario({ onBack, onVoltar, post, aoCurtirComentario,
       }
       if (userMatch.imagemPerfil) {
         return typeof userMatch.imagemPerfil === 'string'
-          ? { uri: userMatch.imagemPerfil }
+          ? (userMatch.imagemPerfil.startsWith('data:') || userMatch.imagemPerfil.startsWith('http')
+              ? { uri: userMatch.imagemPerfil }
+              : (userMatch.imagemPerfil.includes('top amigo') ? avatarEduardo : avatarDefault))
           : userMatch.imagemPerfil;
       }
     }
@@ -137,16 +149,18 @@ export default function Comentario({ onBack, onVoltar, post, aoCurtirComentario,
     // 3. Fallback para avatar do comentário original se existir
     if (item.avatar) {
       if (typeof item.avatar === 'string') {
-        if (item.avatar.includes('http') || item.avatar.includes('blob:')) {
+        if (item.avatar.includes('http') || item.avatar.includes('blob:') || item.avatar.startsWith('data:')) {
           return { uri: item.avatar };
         }
+        if (item.avatar.includes('top amigo')) return avatarEduardo;
+        if (item.avatar.includes('WhatsApp')) return avatarDefault;
       } else {
         return item.avatar;
       }
     }
 
     // 4. Fallback padrão
-    if (nomeAutor === 'Eduardo Torolho') return avatarEduardo;
+    if (nomeAutor.toLowerCase().includes('eduardo')) return avatarEduardo;
     return avatarDefault;
   };
 

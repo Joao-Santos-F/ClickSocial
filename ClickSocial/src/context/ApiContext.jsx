@@ -192,7 +192,23 @@ export const ApiProvider = ({ children }) => {
     try {
       if (typeof window !== "undefined" && window.localStorage) {
         const salvo = window.localStorage.getItem("clicksocial_dados_perfil");
-        if (salvo) return JSON.parse(salvo);
+        if (salvo) {
+          const parsed = JSON.parse(salvo);
+          if (parsed && typeof parsed === "object") {
+            let img = parsed.imagemPerfil;
+            if (typeof img === "string") {
+              if (img.includes("WhatsApp")) img = require("../../assets/WhatsApp Image 2026-08-25 at 11.25.57 2.png");
+              else if (img.includes("top amigo")) img = require("../../assets/top amigo 2.png");
+              else if (img.startsWith("data:") || img.startsWith("http")) img = { uri: img };
+            } else if (parsed.fotoUri && (parsed.fotoUri.startsWith("data:") || parsed.fotoUri.startsWith("http"))) {
+              img = { uri: parsed.fotoUri };
+            }
+            return {
+              ...parsed,
+              imagemPerfil: img || DADOS_INICIAIS.perfil.imagemPerfil,
+            };
+          }
+        }
       }
     } catch (e) {}
     return DADOS_INICIAIS.perfil;
@@ -234,13 +250,14 @@ export const ApiProvider = ({ children }) => {
        (usuarioAtual.nome || "").toLowerCase() === (p.user || "").toLowerCase())
     ) {
       if (usuarioAtual.fotoUri) avatarResolved = usuarioAtual.fotoUri;
+      else if (dadosPerfil?.fotoUri) avatarResolved = dadosPerfil.fotoUri;
       else if (dadosPerfil?.imagemPerfil) avatarResolved = dadosPerfil.imagemPerfil;
     }
 
     if (typeof avatarResolved === "string") {
       if (avatarResolved.includes("top amigo")) avatarResolved = require("../../assets/top amigo 2.png");
       else if (avatarResolved.includes("WhatsApp Image") || avatarResolved.includes("Gemini")) avatarResolved = require("../../assets/WhatsApp Image 2026-08-25 at 11.25.57 2.png");
-      else if (avatarResolved.includes("http") || avatarResolved.includes("blob:")) avatarResolved = avatarResolved;
+      else if (avatarResolved.includes("http") || avatarResolved.includes("blob:") || avatarResolved.startsWith("data:")) avatarResolved = avatarResolved;
     }
 
     let imageResolved = p.image;
@@ -294,16 +311,45 @@ export const ApiProvider = ({ children }) => {
         const notifData = await resNotif.json();
         const perfilData = await resPerfil.json();
 
+        let usuarioAtualizadoRef = usuarioLogado;
+
         if (Array.isArray(usersData) && usersData.length > 0) {
           setUsuarios(usersData);
+
+          // Sincroniza usuário autenticado com dados atualizados do banco/servidor
+          const userServidor = usersData.find(
+            (u) =>
+              (usuarioLogado?.id && u.id === usuarioLogado.id) ||
+              (usuarioLogado?.usuario && (u.usuario || "").toLowerCase() === usuarioLogado.usuario.toLowerCase()) ||
+              (usuarioLogado?.email && (u.email || "").toLowerCase() === usuarioLogado.email.toLowerCase())
+          );
+
+          if (userServidor) {
+            usuarioAtualizadoRef = userServidor;
+            setUsuarioLogado(userServidor);
+            const fotoReal = userServidor.fotoUri
+              ? { uri: userServidor.fotoUri }
+              : (userServidor.imagemPerfil && typeof userServidor.imagemPerfil === "string" && !userServidor.imagemPerfil.includes("WhatsApp") && !userServidor.imagemPerfil.includes("top amigo")
+                ? { uri: userServidor.imagemPerfil }
+                : (userServidor.imagemPerfil || DADOS_INICIAIS.perfil.imagemPerfil));
+
+            setDadosPerfil({
+              ...userServidor,
+              imagemPerfil: fotoReal,
+              fotoUri: userServidor.fotoUri || null,
+              verificado: userServidor.verificado || false,
+              seguidores: userServidor.seguidores ?? 0,
+              seguindo: userServidor.seguindo ?? 0,
+            });
+          }
         }
         
         // Ordena os posts em ordem cronológica decrescente (mais novos no topo)
-        const postsProcessados = postsData.map((p) => processarPostServidor(p, usuarioLogado));
+        const postsProcessados = postsData.map((p) => processarPostServidor(p, usuarioAtualizadoRef));
         setPosts(ordenarPostsPorData(postsProcessados));
 
         setNotificacoes(notifData);
-        if (perfilData && perfilData.usuario && !usuarioLogado) {
+        if (perfilData && perfilData.usuario && !usuarioAtualizadoRef) {
           setDadosPerfil({
             ...perfilData,
             verificado: perfilData.verificado || false,
@@ -609,6 +655,7 @@ export const ApiProvider = ({ children }) => {
     const agoraTimestamp = Date.now();
     const avatarRaw =
       usuarioLogado?.fotoUri ||
+      dadosPerfil?.fotoUri ||
       (typeof dadosPerfil?.imagemPerfil === "string" ? dadosPerfil.imagemPerfil : dadosPerfil?.imagemPerfil?.uri) ||
       novoPost.avatar;
 
@@ -662,7 +709,7 @@ export const ApiProvider = ({ children }) => {
     let postAtualizado = null;
     const autorNome = usuarioLogado?.nome || dadosPerfil.nome || "Você";
     const autorUsuario = usuarioLogado?.usuario || dadosPerfil.usuario || "meu_usuario";
-    const autorFoto = usuarioLogado?.fotoUri || (typeof dadosPerfil.imagemPerfil === "string" ? dadosPerfil.imagemPerfil : dadosPerfil.imagemPerfil?.uri) || null;
+    const autorFoto = usuarioLogado?.fotoUri || dadosPerfil?.fotoUri || (typeof dadosPerfil?.imagemPerfil === "string" ? dadosPerfil.imagemPerfil : dadosPerfil?.imagemPerfil?.uri) || null;
 
     const novoComentarioObj = {
       id: String(Date.now()),
@@ -778,24 +825,36 @@ export const ApiProvider = ({ children }) => {
     return postAtualizado;
   };
 
-  // Atualizar perfil do usuário ativo
+  // Atualizar perfil do usuário ativo com conversão permanente e propagação total
   const atualizarPerfil = async (novosDados) => {
-    const fotoUriCalculada = novosDados.imagemPerfil?.uri || (typeof novosDados.imagemPerfil === "string" ? novosDados.imagemPerfil : null);
+    const fotoUriRaw =
+      novosDados.fotoUri ||
+      novosDados.imagemPerfil?.uri ||
+      (typeof novosDados.imagemPerfil === "string" ? novosDados.imagemPerfil : null);
+
+    // Converte de imediato qualquer URI (inclusive blob temporário de navegador) para Base64 permanente
+    const fotoUriPermanente = fotoUriRaw ? await resolverUriPermanente(fotoUriRaw) : null;
+    const imagemPerfilFinal = fotoUriPermanente
+      ? { uri: fotoUriPermanente }
+      : (novosDados.imagemPerfil || dadosPerfil?.imagemPerfil || DADOS_INICIAIS.perfil.imagemPerfil);
+
     const perfilAtualizado = {
       ...dadosPerfil,
       ...novosDados,
-      imagemPerfil: novosDados.imagemPerfil || dadosPerfil.imagemPerfil,
+      fotoUri: fotoUriPermanente || dadosPerfil?.fotoUri || null,
+      imagemPerfil: imagemPerfilFinal,
     };
 
     setDadosPerfil(perfilAtualizado);
 
+    let userAtualizado = null;
     if (usuarioLogado) {
-      const userAtualizado = {
+      userAtualizado = {
         ...usuarioLogado,
         nome: novosDados.nome || usuarioLogado.nome,
         usuario: novosDados.usuario || usuarioLogado.usuario,
-        bio: novosDados.bio || usuarioLogado.bio,
-        fotoUri: fotoUriCalculada || usuarioLogado.fotoUri,
+        bio: novosDados.bio !== undefined ? novosDados.bio : usuarioLogado.bio,
+        fotoUri: fotoUriPermanente || usuarioLogado.fotoUri,
       };
 
       setUsuarioLogado(userAtualizado);
@@ -810,17 +869,37 @@ export const ApiProvider = ({ children }) => {
       } catch (e) {}
     }
 
+    // Sincroniza em tempo real as publicações existentes do usuário no Feed para exibir a nova foto
+    const nomeIdentificador = (userAtualizado?.usuario || userAtualizado?.nome || perfilAtualizado.usuario || perfilAtualizado.nome || "").toLowerCase();
+    const avatarParaPosts = fotoUriPermanente || (typeof imagemPerfilFinal === "object" ? imagemPerfilFinal.uri : imagemPerfilFinal);
+
+    if (nomeIdentificador && avatarParaPosts) {
+      setPosts((prevPosts) => {
+        const postsAtualizados = prevPosts.map((p) => {
+          const postUser = (p.user || "").toLowerCase();
+          if (postUser === nomeIdentificador) {
+            return {
+              ...p,
+              avatar: avatarParaPosts,
+            };
+          }
+          return p;
+        });
+        return ordenarPostsPorData(postsAtualizados);
+      });
+    }
+
     try {
       await fetch(`${API_BASE_URL}/perfil`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          id: "1",
+          id: userAtualizado?.id || perfilAtualizado.id || "u1",
           nome: perfilAtualizado.nome,
           usuario: perfilAtualizado.usuario,
           bio: perfilAtualizado.bio,
-          imagemPerfil: fotoUriCalculada || "WhatsApp Image 2026-08-25 at 11.25.57 2.png",
-          fotoUri: fotoUriCalculada || null,
+          imagemPerfil: fotoUriPermanente || (typeof imagemPerfilFinal === "string" ? imagemPerfilFinal : "WhatsApp Image 2026-08-25 at 11.25.57 2.png"),
+          fotoUri: fotoUriPermanente || null,
         }),
       });
     } catch (e) {

@@ -51,9 +51,28 @@ export const CriarPost = ({ onVoltar, onPublicarSucesso, dadosPerfil }) => {
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
         const asset = result.assets[0];
-        const uriPermanente = asset.base64
+        let uriPermanente = asset.base64
           ? `data:image/jpeg;base64,${asset.base64}`
           : asset.uri;
+
+        if (uriPermanente && uriPermanente.startsWith("blob:")) {
+          try {
+            const resp = await fetch(uriPermanente);
+            const blob = await resp.blob();
+            uriPermanente = await new Promise((resolve) => {
+              const reader = new FileReader();
+              reader.onloadend = () => {
+                if (reader.result && typeof reader.result === "string") {
+                  resolve(reader.result);
+                } else {
+                  resolve(uriPermanente);
+                }
+              };
+              reader.onerror = () => resolve(uriPermanente);
+              reader.readAsDataURL(blob);
+            });
+          } catch (e) {}
+        }
         setImagem({ uri: uriPermanente });
       }
     } catch (error) {
@@ -83,9 +102,28 @@ export const CriarPost = ({ onVoltar, onPublicarSucesso, dadosPerfil }) => {
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
         const asset = result.assets[0];
-        const uriPermanente = asset.base64
+        let uriPermanente = asset.base64
           ? `data:image/jpeg;base64,${asset.base64}`
           : asset.uri;
+
+        if (uriPermanente && uriPermanente.startsWith("blob:")) {
+          try {
+            const resp = await fetch(uriPermanente);
+            const blob = await resp.blob();
+            uriPermanente = await new Promise((resolve) => {
+              const reader = new FileReader();
+              reader.onloadend = () => {
+                if (reader.result && typeof reader.result === "string") {
+                  resolve(reader.result);
+                } else {
+                  resolve(uriPermanente);
+                }
+              };
+              reader.onerror = () => resolve(uriPermanente);
+              reader.readAsDataURL(blob);
+            });
+          } catch (e) {}
+        }
         setImagem({ uri: uriPermanente });
       }
     } catch (error) {
@@ -146,13 +184,18 @@ export const CriarPost = ({ onVoltar, onPublicarSucesso, dadosPerfil }) => {
       return;
     }
 
+    const avatarPostAtual =
+      (dadosPerfil?.fotoUri ? { uri: dadosPerfil.fotoUri } : null) ||
+      dadosPerfil?.imagemPerfil ||
+      require("../../../assets/WhatsApp Image 2026-08-25 at 11.25.57 2.png");
+
     const novoPost = {
       id: String(Date.now()),
       user: dadosPerfil?.nome || dadosPerfil?.usuario || "Arthurbr-YT",
       time: "Agora",
       text: texto.trim(),
       accent: "#5ef9d6",
-      avatar: dadosPerfil?.imagemPerfil || require("../../../assets/WhatsApp Image 2026-08-25 at 11.25.57 2.png"),
+      avatar: avatarPostAtual,
       image: imagem ? imagem.uri : null,
       curtidas: 0,
       curtido: false,

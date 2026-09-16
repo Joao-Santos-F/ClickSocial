@@ -52,8 +52,8 @@ export function ProfileHeader({ onEditPress, onVoltarPress, dadosPerfil, postsCo
 
   const renderAvatarImage = () => {
     let img =
-      dadosPerfil?.imagemPerfil ||
       dadosPerfil?.fotoUri ||
+      dadosPerfil?.imagemPerfil ||
       usuarioLogado?.fotoUri ||
       usuarioLogado?.imagemPerfil;
 
@@ -69,18 +69,21 @@ export function ProfileHeader({ onEditPress, onVoltarPress, dadosPerfil, postsCo
       let uriStr = typeof img === "object" ? img?.uri : img;
 
       if (typeof uriStr === "string") {
+        if (uriStr.startsWith("data:") || uriStr.startsWith("http") || uriStr.startsWith("blob:")) {
+          return <Image source={{ uri: uriStr }} style={styles.avatarImage} resizeMode="cover" />;
+        }
         if (uriStr.includes("WhatsApp")) {
           return <Image source={require("../../assets/WhatsApp Image 2026-08-25 at 11.25.57 2.png")} style={styles.avatarImage} resizeMode="cover" />;
         }
         if (uriStr.includes("top amigo")) {
           return <Image source={require("../../assets/top amigo 2.png")} style={styles.avatarImage} resizeMode="cover" />;
         }
-        if (uriStr.startsWith("data:") || uriStr.startsWith("http") || uriStr.startsWith("blob:")) {
-          return <Image source={{ uri: uriStr }} style={styles.avatarImage} resizeMode="cover" />;
-        }
       }
-      if (typeof img === "number" || typeof img === "object") {
+      if (typeof img === "number") {
         return <Image source={img} style={styles.avatarImage} resizeMode="cover" />;
+      }
+      if (typeof img === "object" && img?.uri) {
+        return <Image source={{ uri: img.uri }} style={styles.avatarImage} resizeMode="cover" />;
       }
     }
 

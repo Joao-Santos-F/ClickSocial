@@ -19,10 +19,23 @@ export default function EditarPerfil({ perfil, onVoltar, onSalvar }) {
   const [bio, setBio] = useState(
     perfil?.bio || 'Criador de conteúdo e explorador de ideias.'
   );
-  const [imagemPerfil, setImagemPerfil] = useState(
-    perfil?.imagemPerfil ||
-      require('../../assets/WhatsApp Image 2026-08-25 at 11.25.57 2.png')
-  );
+
+  const obterFonteInicial = () => {
+    if (perfil?.fotoUri) return { uri: perfil.fotoUri };
+    if (perfil?.imagemPerfil) {
+      if (typeof perfil.imagemPerfil === 'string') {
+        if (perfil.imagemPerfil.startsWith('data:') || perfil.imagemPerfil.startsWith('http')) {
+          return { uri: perfil.imagemPerfil };
+        }
+        if (perfil.imagemPerfil.includes('top amigo')) return require('../../assets/top amigo 2.png');
+        if (perfil.imagemPerfil.includes('WhatsApp')) return require('../../assets/WhatsApp Image 2026-08-25 at 11.25.57 2.png');
+      }
+      return perfil.imagemPerfil;
+    }
+    return require('../../assets/WhatsApp Image 2026-08-25 at 11.25.57 2.png');
+  };
+
+  const [imagemPerfil, setImagemPerfil] = useState(obterFonteInicial);
 
   const selecionarImagem = async () => {
     try {
@@ -45,9 +58,32 @@ export default function EditarPerfil({ perfil, onVoltar, onSalvar }) {
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
         const asset = result.assets[0];
-        const uriPermanente = asset.base64
+        let uriPermanente = asset.base64
           ? `data:image/jpeg;base64,${asset.base64}`
           : asset.uri;
+
+        // Se for blob temporário de navegador, converte imediatamente para Data URL Base64 persistente
+        if (uriPermanente && uriPermanente.startsWith('blob:')) {
+          try {
+            const resp = await fetch(uriPermanente);
+            const blob = await resp.blob();
+            uriPermanente = await new Promise((resolve) => {
+              const reader = new FileReader();
+              reader.onloadend = () => {
+                if (reader.result && typeof reader.result === 'string') {
+                  resolve(reader.result);
+                } else {
+                  resolve(uriPermanente);
+                }
+              };
+              reader.onerror = () => resolve(uriPermanente);
+              reader.readAsDataURL(blob);
+            });
+          } catch (err) {
+            console.log('Erro ao converter blob para base64:', err);
+          }
+        }
+
         setImagemPerfil({ uri: uriPermanente });
       }
     } catch (error) {
@@ -56,9 +92,40 @@ export default function EditarPerfil({ perfil, onVoltar, onSalvar }) {
     }
   };
 
+  const obterFonteAvatar = () => {
+    if (!imagemPerfil) {
+      return require('../../assets/WhatsApp Image 2026-08-25 at 11.25.57 2.png');
+    }
+    if (typeof imagemPerfil === 'object' && imagemPerfil?.uri) {
+      return { uri: imagemPerfil.uri };
+    }
+    if (typeof imagemPerfil === 'string') {
+      if (imagemPerfil.startsWith('data:') || imagemPerfil.startsWith('http') || imagemPerfil.startsWith('blob:')) {
+        return { uri: imagemPerfil };
+      }
+      if (imagemPerfil.includes('top amigo')) {
+        return require('../../assets/top amigo 2.png');
+      }
+      if (imagemPerfil.includes('WhatsApp')) {
+        return require('../../assets/WhatsApp Image 2026-08-25 at 11.25.57 2.png');
+      }
+    }
+    if (typeof imagemPerfil === 'number') {
+      return imagemPerfil;
+    }
+    return require('../../assets/WhatsApp Image 2026-08-25 at 11.25.57 2.png');
+  };
+
   const lidarSalvar = () => {
     if (onSalvar) {
-      onSalvar({ nome, usuario, bio, imagemPerfil });
+      const uriFinal = typeof imagemPerfil === 'object' && imagemPerfil?.uri ? imagemPerfil.uri : imagemPerfil;
+      onSalvar({
+        nome,
+        usuario,
+        bio,
+        imagemPerfil,
+        fotoUri: typeof uriFinal === 'string' && (uriFinal.startsWith('data:') || uriFinal.startsWith('http')) ? uriFinal : null,
+      });
     } else if (onVoltar) {
       onVoltar();
     }
@@ -93,7 +160,7 @@ export default function EditarPerfil({ perfil, onVoltar, onSalvar }) {
                 activeOpacity={0.8}
               >
                 <Image
-                  source={imagemPerfil}
+                  source={obterFonteAvatar()}
                   style={styles.avatar}
                   resizeMode="cover"
                 />

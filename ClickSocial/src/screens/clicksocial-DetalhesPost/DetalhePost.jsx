@@ -61,7 +61,9 @@ export const DetalhesPost = ({ onVoltar, onVerComentarios, post, aoCurtirPost })
   const postAvatar =
     (autorMatch?.fotoUri ? { uri: autorMatch.fotoUri } : null) ||
     (autorMatch?.imagemPerfil ? (typeof autorMatch.imagemPerfil === "string" ? { uri: autorMatch.imagemPerfil } : autorMatch.imagemPerfil) : null) ||
-    (dadosPerfil?.usuario?.toLowerCase() === (post?.user || "").toLowerCase() ? (dadosPerfil.imagemPerfil || (dadosPerfil.fotoUri ? { uri: dadosPerfil.fotoUri } : null)) : null) ||
+    (dadosPerfil?.usuario?.toLowerCase() === (post?.user || "").toLowerCase() || dadosPerfil?.nome?.toLowerCase() === (post?.user || "").toLowerCase()
+      ? (dadosPerfil?.fotoUri ? { uri: dadosPerfil.fotoUri } : dadosPerfil?.imagemPerfil)
+      : null) ||
     post?.avatar ||
     avatarDefault;
 
@@ -80,16 +82,56 @@ export const DetalhesPost = ({ onVoltar, onVerComentarios, post, aoCurtirPost })
 
   const handleAdicionarComentario = () => {
     if (!novoComentario.trim()) return;
+    const avatarComentario =
+      (dadosPerfil?.fotoUri ? { uri: dadosPerfil.fotoUri } : null) ||
+      dadosPerfil?.imagemPerfil ||
+      avatarDefault;
+
     setComentarios([
       ...comentarios,
       {
         id: String(Date.now()),
         autor: dadosPerfil?.usuario || "Você",
         texto: novoComentario.trim(),
-        avatar: dadosPerfil?.imagemPerfil || avatarDefault,
+        avatar: avatarComentario,
       },
     ]);
     setNovoComentario("");
+  };
+
+  const resolverAvatarComentario = (c) => {
+    if (c?.avatar) {
+      if (typeof c.avatar === "object" && c.avatar.uri) return { uri: c.avatar.uri };
+      if (typeof c.avatar === "string") {
+        if (c.avatar.startsWith("data:") || c.avatar.startsWith("http") || c.avatar.startsWith("blob:")) {
+          return { uri: c.avatar };
+        }
+        if (c.avatar.includes("top amigo")) return require("../../../assets/top amigo 2.png");
+        if (c.avatar.includes("WhatsApp")) return avatarDefault;
+      }
+      if (typeof c.avatar === "number") return c.avatar;
+    }
+
+    const autorComent = (c?.autor || c?.nome || "").toLowerCase();
+    if (
+      dadosPerfil &&
+      (autorComent === (dadosPerfil.usuario || "").toLowerCase() ||
+       autorComent === (dadosPerfil.nome || "").toLowerCase() ||
+       autorComent === "você")
+    ) {
+      if (dadosPerfil.fotoUri) return { uri: dadosPerfil.fotoUri };
+      if (dadosPerfil.imagemPerfil) return dadosPerfil.imagemPerfil;
+    }
+
+    const matchUser = usuarios.find(
+      (u) =>
+        (u.usuario || "").toLowerCase() === autorComent ||
+        (u.nome || "").toLowerCase() === autorComent
+    );
+    if (matchUser?.fotoUri) return { uri: matchUser.fotoUri };
+    if (matchUser?.imagemPerfil) return matchUser.imagemPerfil;
+
+    return avatarDefault;
   };
 
   return (
@@ -212,9 +254,16 @@ export const DetalhesPost = ({ onVoltar, onVerComentarios, post, aoCurtirPost })
               {mostrarComentarios && (
                 <View style={DetalhePostStyles.commentsContainer}>
                   {comentarios.map((c, index) => {
+                    const avatarFonteC = resolverAvatarComentario(c);
                     return (
                       <View key={c.id || index} style={[DetalhePostStyles.commentItem, { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 10 }]}>
-                        <Image source={avatarDefault} style={{ width: 32, height: 32, borderRadius: 16 }} resizeMode="cover" />
+                        {typeof avatarFonteC === "object" && avatarFonteC?.uri ? (
+                          <Image source={{ uri: avatarFonteC.uri }} style={{ width: 32, height: 32, borderRadius: 16 }} resizeMode="cover" />
+                        ) : typeof avatarFonteC === "string" ? (
+                          <Image source={{ uri: avatarFonteC }} style={{ width: 32, height: 32, borderRadius: 16 }} resizeMode="cover" />
+                        ) : (
+                          <Image source={avatarFonteC} style={{ width: 32, height: 32, borderRadius: 16 }} resizeMode="cover" />
+                        )}
                         <View style={{ flex: 1 }}>
                           <Text style={DetalhePostStyles.commentAuthor}>{c.autor || c.nome}</Text>
                           <Text style={DetalhePostStyles.commentBody}>{c.texto}</Text>
