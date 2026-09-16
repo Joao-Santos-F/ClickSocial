@@ -9,10 +9,12 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import * as ImagePicker from "expo-image-picker";
+import * as Location from "expo-location";
 
 import { CriaPost } from "./CriaPost.js";
 import setaE from "../../../assets/incon_seta-esquerda.png";
@@ -26,6 +28,7 @@ export const CriarPost = ({ onVoltar, onPublicarSucesso, dadosPerfil }) => {
   const [texto, setTexto] = useState("");
   const [imagem, setImagem] = useState(null);
   const [localizacao, setLocalizacao] = useState(null);
+  const [carregandoLocalizacao, setCarregandoLocalizacao] = useState(false);
   const [tagsSelecionadas, setTagsSelecionadas] = useState(["#ClickSocial"]);
   const [inputTag, setInputTag] = useState("");
 
@@ -45,7 +48,7 @@ export const CriarPost = ({ onVoltar, onPublicarSucesso, dadosPerfil }) => {
         mediaTypes: ["images"],
         allowsEditing: true,
         aspect: [1, 1],
-        quality: 0.8,
+        quality: 0.6,
         base64: true,
       });
 
@@ -96,7 +99,7 @@ export const CriarPost = ({ onVoltar, onPublicarSucesso, dadosPerfil }) => {
       const result = await ImagePicker.launchCameraAsync({
         allowsEditing: true,
         aspect: [1, 1],
-        quality: 0.8,
+        quality: 0.6,
         base64: true,
       });
 
@@ -132,12 +135,81 @@ export const CriarPost = ({ onVoltar, onPublicarSucesso, dadosPerfil }) => {
     }
   };
 
-  // Alternar localização
-  const handleToggleLocalizacao = () => {
+  // Alternar/Obter localização nativa via GPS (Latitude, Altitude e Geocodificação)
+  const handleToggleLocalizacao = async () => {
     if (localizacao) {
       setLocalizacao(null);
-    } else {
-      setLocalizacao("São Paulo, SP");
+      return;
+    }
+
+    setCarregandoLocalizacao(true);
+
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+
+      if (status !== "granted") {
+        Alert.alert(
+          "Permissão Negada",
+          "Permita o acesso à localização para incluir suas coordenadas e cidade na publicação."
+        );
+        setCarregandoLocalizacao(false);
+        return;
+      }
+
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
+
+      if (location && location.coords) {
+        const { latitude, longitude, altitude } = location.coords;
+        const altStr = altitude !== null && altitude !== undefined ? `${Math.round(altitude)}m` : "0m";
+        const latStr = `${latitude > 0 ? "+" : ""}${latitude.toFixed(4)}°`;
+
+        const reverseGeocode = await Location.reverseGeocodeAsync({
+          latitude,
+          longitude,
+        });
+
+        let textoFinal = "";
+        if (reverseGeocode && reverseGeocode.length > 0) {
+          const item = reverseGeocode[0];
+          const cidade = item.city || item.subregion || item.district || item.name || "São Paulo";
+          const estado = item.region || item.isoCountryCode || "SP";
+          textoFinal = `${cidade}, ${estado} • Lat: ${latStr}, Alt: ${altStr}`;
+        } else {
+          textoFinal = `Lat: ${latStr}, Long: ${longitude.toFixed(4)}°, Alt: ${altStr}`;
+        }
+
+        setLocalizacao(textoFinal);
+      }
+    } catch (error) {
+      console.log("Erro ao obter localização nativa:", error);
+
+      // Tenta recuperar última posição conhecida se a busca direta por GPS demorar
+      try {
+        const lastKnown = await Location.getLastKnownPositionAsync();
+        if (lastKnown && lastKnown.coords) {
+          const { latitude, longitude, altitude } = lastKnown.coords;
+          const altStr = altitude !== null && altitude !== undefined ? `${Math.round(altitude)}m` : "0m";
+          const latStr = `${latitude > 0 ? "+" : ""}${latitude.toFixed(4)}°`;
+
+          const rev = await Location.reverseGeocodeAsync({ latitude, longitude });
+          if (rev && rev[0]) {
+            const c = rev[0].city || rev[0].name || "São Paulo";
+            const e = rev[0].region || "SP";
+            setLocalizacao(`${c}, ${e} • Lat: ${latStr}, Alt: ${altStr}`);
+            setCarregandoLocalizacao(false);
+            return;
+          }
+        }
+      } catch (e) {}
+
+      Alert.alert(
+        "Erro de GPS",
+        "Não foi possível obter os dados de GPS do dispositivo."
+      );
+    } finally {
+      setCarregandoLocalizacao(false);
     }
   };
 
@@ -259,8 +331,15 @@ export const CriarPost = ({ onVoltar, onPublicarSucesso, dadosPerfil }) => {
                 onChangeText={setTexto}
               />
 
-              {/* Tag de Localização (se ativa) */}
-              {localizacao && (
+              {/* Tag de Localização (se ativa ou carregando) */}
+              {carregandoLocalizacao && (
+                <View style={[CriaPost.locationBadge, { flexDirection: "row", alignItems: "center" }]}>
+                  <ActivityIndicator size="small" color="#5ef9d6" style={{ marginRight: 6 }} />
+                  <Text style={CriaPost.locationText}>Obtendo localização real...</Text>
+                </View>
+              )}
+
+              {!carregandoLocalizacao && localizacao && (
                 <TouchableOpacity
                   style={CriaPost.locationBadge}
                   onPress={handleToggleLocalizacao}

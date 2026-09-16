@@ -123,6 +123,23 @@ export const Feedstyles = StyleSheet.create({
         color: '#20232a',
         marginBottom: 10,
     },
+    LocationBadgeRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(44, 16, 109, 0.08)',
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 10,
+        alignSelf: 'flex-start',
+        marginBottom: 8,
+        borderWidth: 1,
+        borderColor: 'rgba(44, 16, 109, 0.2)',
+    },
+    LocationBadgeText: {
+        fontSize: 12,
+        fontWeight: '600',
+        color: '#2C106D',
+    },
     artwork: {
         width: '100%',
         height: 210,

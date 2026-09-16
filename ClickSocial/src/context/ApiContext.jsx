@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { Platform } from "react-native";
 import Constants from "expo-constants";
+import * as FileSystem from "expo-file-system";
 
 // URL Base flexível conforme o ambiente (Web, Android, iOS ou Dispositivo Físico)
 const getApiBaseUrl = () => {
@@ -210,23 +211,76 @@ export const ordenarNotificacoesPorData = (lista) => {
 
 const ApiContext = createContext();
 
-// Auxiliar de conversao de blobs temporarios do navegador para Data URL Base64 permanente
+// Redimensiona e otimiza imagens Base64 no navegador para evitar estouro de memória e payload
+const otimizarBase64Image = (dataUrl, maxDimension = 800, quality = 0.7) => {
+  return new Promise((resolve) => {
+    if (
+      typeof window === "undefined" ||
+      typeof Image === "undefined" ||
+      !dataUrl ||
+      typeof dataUrl !== "string" ||
+      !dataUrl.startsWith("data:image") ||
+      dataUrl.length < 250000
+    ) {
+      return resolve(dataUrl);
+    }
+
+    try {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+
+        if (width > maxDimension || height > maxDimension) {
+          if (width > height) {
+            height = Math.round((height * maxDimension) / width);
+            width = maxDimension;
+          } else {
+            width = Math.round((width * maxDimension) / height);
+            height = maxDimension;
+          }
+        }
+
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return resolve(dataUrl);
+
+        ctx.drawImage(img, 0, 0, width, height);
+        const compressed = canvas.toDataURL("image/jpeg", quality);
+        resolve(compressed);
+      };
+      img.onerror = () => resolve(dataUrl);
+      img.src = dataUrl;
+    } catch (e) {
+      resolve(dataUrl);
+    }
+  });
+};
+
+// Auxiliar de conversao de URIs (blobs, file://, content://) para Data URL Base64 permanente e universal
 export const resolverUriPermanente = async (input) => {
   if (!input) return null;
   const uri = typeof input === "string" ? input : input?.uri;
   if (!uri) return null;
 
-  if (uri.startsWith("data:image")) return uri;
-
-  if (typeof input === "object" && input.base64) {
-    return `data:image/jpeg;base64,${input.base64}`;
+  if (uri.startsWith("data:image")) {
+    return await otimizarBase64Image(uri);
   }
 
+  if (typeof input === "object" && input.base64) {
+    const rawData = `data:image/jpeg;base64,${input.base64}`;
+    return await otimizarBase64Image(rawData);
+  }
+
+  // Tratamento para URIs blob (Navegador Web)
   if (uri.startsWith("blob:")) {
     try {
       const response = await fetch(uri);
       const blob = await response.blob();
-      return new Promise((resolve) => {
+      const rawResult = await new Promise((resolve) => {
         const reader = new FileReader();
         reader.onloadend = () => {
           if (reader.result && typeof reader.result === "string" && reader.result.startsWith("data:image")) {
@@ -238,8 +292,36 @@ export const resolverUriPermanente = async (input) => {
         reader.onerror = () => resolve(uri);
         reader.readAsDataURL(blob);
       });
+      return await otimizarBase64Image(rawResult);
     } catch (e) {
       return uri;
+    }
+  }
+
+  // Tratamento universal para URIs de arquivos de celular (Android / iOS)
+  if (uri.startsWith("file://") || uri.startsWith("content://") || uri.startsWith("ph://")) {
+    try {
+      const base64Data = await FileSystem.readAsStringAsync(uri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+      if (base64Data) {
+        const rawData = `data:image/jpeg;base64,${base64Data}`;
+        return await otimizarBase64Image(rawData);
+      }
+    } catch (e) {
+      try {
+        const response = await fetch(uri);
+        const blob = await response.blob();
+        const rawResult = await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.onerror = () => resolve(uri);
+          reader.readAsDataURL(blob);
+        });
+        if (typeof rawResult === "string" && rawResult.startsWith("data:image")) {
+          return await otimizarBase64Image(rawResult);
+        }
+      } catch (err) {}
     }
   }
 
@@ -458,7 +540,14 @@ export const ApiProvider = ({ children }) => {
 
   useEffect(() => {
     recarregarDados();
-  }, []);
+
+    // Sincronização periódica em segundo plano entre Android, iOS e Web
+    const interval = setInterval(() => {
+      recarregarDados();
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [recarregarDados]);
 
   // Autenticação: Fazer Login
   const fazerLogin = async ({ email, senha }) => {
@@ -778,17 +867,28 @@ export const ApiProvider = ({ children }) => {
     });
 
     try {
-      await fetch(`${API_BASE_URL}/posts`, {
+      const postParaServidor = {
+        ...postFormatado,
+        avatar: typeof avatarDoUsuario === "string" ? avatarDoUsuario : (avatarDoUsuario?.uri || "WhatsApp Image 2026-08-25 at 11.25.57 2.png"),
+        image: typeof imagemDoPost === "string" ? imagemDoPost : (imagemDoPost?.uri || null),
+      };
+
+      const response = await fetch(`${API_BASE_URL}/posts`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...postFormatado,
-          avatar: typeof avatarDoUsuario === "string" ? avatarDoUsuario : (avatarDoUsuario?.uri || "WhatsApp Image 2026-08-25 at 11.25.57 2.png"),
-          image: typeof imagemDoPost === "string" ? imagemDoPost : (imagemDoPost?.uri || null),
-        }),
+        body: JSON.stringify(postParaServidor),
       });
+
+      if (response.ok) {
+        setIsOnline(true);
+        console.log(`[ApiContext] Publicação salva na API com sucesso (ID: ${postFormatado.id})`);
+        recarregarDados();
+      } else {
+        const errorText = await response.text();
+        console.warn(`[ApiContext] Erro ao salvar publicação na API (Status ${response.status}):`, errorText);
+      }
     } catch (e) {
-      console.log("[ApiContext] Servidor json-server offline ao criar post (usando modo local).");
+      console.log("[ApiContext] Servidor json-server offline ao criar post (usando modo local).", e);
     }
   };
 

@@ -18,7 +18,7 @@ export function CampoFoto({ rotulo = "Foto de Perfil", textoAjuda = "Insira sua 
       mediaTypes: ['images'],
       allowsEditing: true,
       aspect: [1, 1],
-      quality: 0.8,
+      quality: 0.6,
       base64: true,
     });
 

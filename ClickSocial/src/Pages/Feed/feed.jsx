@@ -225,7 +225,9 @@ export default function Feed({
 
                   <View style={Feedstyles.UserTextWrap}>
                     <Text style={Feedstyles.UserName}>{post.user}</Text>
-                    <Text style={Feedstyles.MetaText}>{post.time || "Agora"}</Text>
+                    <Text style={Feedstyles.MetaText}>
+                      {post.time || "Agora"}{post.localizacao ? ` • 📍 ${post.localizacao}` : ""}
+                    </Text>
                   </View>
 
                   <TouchableOpacity style={Feedstyles.MenuButton} activeOpacity={0.7}>
@@ -234,6 +236,12 @@ export default function Feed({
                 </View>
 
                 <Text style={Feedstyles.PostText}>{post.text}</Text>
+
+                {Boolean(post.localizacao) && (
+                  <View style={Feedstyles.LocationBadgeRow}>
+                    <Text style={Feedstyles.LocationBadgeText}>📍 {post.localizacao}</Text>
+                  </View>
+                )}
 
                 <TouchableOpacity
                   activeOpacity={0.9}
