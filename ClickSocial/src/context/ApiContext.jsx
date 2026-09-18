@@ -210,8 +210,8 @@ export const ordenarNotificacoesPorData = (lista) => {
 
 const ApiContext = createContext();
 
-// Redimensiona e otimiza imagens Base64 no navegador para evitar estouro de memória e payload
-const otimizarBase64Image = (dataUrl, maxDimension = 500, quality = 0.5) => {
+// Redimensiona e otimiza imagens Base64 no navegador para evitar estouro de memória e payload (máx 100KB do json-server)
+const otimizarBase64Image = (dataUrl, maxDimension = 350, quality = 0.45) => {
   return new Promise((resolve) => {
     if (
       typeof window === "undefined" ||
