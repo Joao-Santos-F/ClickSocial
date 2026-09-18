@@ -126,8 +126,13 @@ export const DetalhePostStyles = StyleSheet.create({
   likesRow: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
     marginBottom: 16,
     marginTop: 2,
+  },
+  likesLeftGroup: {
+    flexDirection: "row",
+    alignItems: "center",
   },
   likeButton: {
     flexDirection: "row",
@@ -145,6 +150,18 @@ export const DetalhePostStyles = StyleSheet.create({
     color: "#6E6A82",
     marginLeft: 6,
     fontWeight: "500",
+  },
+  trashBtn: {
+    padding: 6,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  trashIcon: {
+    width: 22,
+    height: 22,
+    resizeMode: "contain",
+    tintColor: "#FF3B30",
   },
 
   commentsButton: {

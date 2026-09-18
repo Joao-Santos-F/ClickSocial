@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { theme } from "../styles/theme";
-import { IconeTabChat } from "./IconesSvg";
+import { IconeTabChat, IconeCoracaoFeed } from "./IconesSvg";
 import { useApi } from "../context/ApiContext";
 
 const avatarPadrao = require("../../assets/WhatsApp Image 2026-08-25 at 11.25.57 2.png");
@@ -18,9 +18,7 @@ function IconeCoracao({ curtido, tamanho = 16 }) {
   const cor = curtido ? "#FF3B30" : "#9CA3AF";
   return (
     <View style={{ width: tamanho, height: tamanho, alignItems: "center", justifyContent: "center" }}>
-      <Text style={{ fontSize: tamanho, color: cor, lineHeight: tamanho + 2 }}>
-        {curtido ? "❤️" : "🤍"}
-      </Text>
+      <IconeCoracaoFeed tamanho={tamanho} cor={cor} preenchido={curtido} />
     </View>
   );
 }

@@ -211,15 +211,14 @@ export const ordenarNotificacoesPorData = (lista) => {
 const ApiContext = createContext();
 
 // Redimensiona e otimiza imagens Base64 no navegador para evitar estouro de memória e payload
-const otimizarBase64Image = (dataUrl, maxDimension = 800, quality = 0.7) => {
+const otimizarBase64Image = (dataUrl, maxDimension = 500, quality = 0.5) => {
   return new Promise((resolve) => {
     if (
       typeof window === "undefined" ||
       typeof Image === "undefined" ||
       !dataUrl ||
       typeof dataUrl !== "string" ||
-      !dataUrl.startsWith("data:image") ||
-      dataUrl.length < 250000
+      !dataUrl.startsWith("data:image")
     ) {
       return resolve(dataUrl);
     }
@@ -399,14 +398,25 @@ export const ApiProvider = ({ children }) => {
     dadosPerfilRef.current = dadosPerfil;
   }, [dadosPerfil]);
 
+  const usuariosRef = useRef(usuarios);
+  useEffect(() => {
+    usuariosRef.current = usuarios;
+  }, [usuarios]);
+
+  const notificacoesRef = useRef(notificacoes);
+  useEffect(() => {
+    notificacoesRef.current = notificacoes;
+  }, [notificacoes]);
+
   const postsRef = useRef(posts);
   useEffect(() => {
     postsRef.current = posts;
   }, [posts]);
 
   // Mapeador auxiliar para tratar imagens e estados dinâmicos por usuário do json-server
-  const processarPostServidor = useCallback((p, usuarioAtual = usuarioLogado) => {
-    const autorPost = usuarios.find(
+  const processarPostServidor = useCallback((p, usuarioAtual = usuarioLogadoRef.current) => {
+    const listaUsuarios = usuariosRef.current || [];
+    const autorPost = listaUsuarios.find(
       (u) =>
         (u.usuario || "").toLowerCase() === (p.user || "").toLowerCase() ||
         (u.nome || "").toLowerCase() === (p.user || "").toLowerCase()
@@ -422,8 +432,8 @@ export const ApiProvider = ({ children }) => {
        (usuarioAtual.nome || "").toLowerCase() === (p.user || "").toLowerCase())
     ) {
       if (usuarioAtual.fotoUri) avatarResolved = usuarioAtual.fotoUri;
-      else if (dadosPerfil?.fotoUri) avatarResolved = dadosPerfil.fotoUri;
-      else if (dadosPerfil?.imagemPerfil) avatarResolved = dadosPerfil.imagemPerfil;
+      else if (dadosPerfilRef.current?.fotoUri) avatarResolved = dadosPerfilRef.current.fotoUri;
+      else if (dadosPerfilRef.current?.imagemPerfil) avatarResolved = dadosPerfilRef.current.imagemPerfil;
     }
 
     if (typeof avatarResolved === "string") {
@@ -465,7 +475,7 @@ export const ApiProvider = ({ children }) => {
       comentariosCount: comentariosTratados.length,
       repostsCount: republicadores.length,
     };
-  }, [usuarios, dadosPerfil, usuarioLogado]);
+  }, []);
 
   const recarregarDados = useCallback(async (isInitial = false) => {
     if (isInitial) {
@@ -488,7 +498,13 @@ export const ApiProvider = ({ children }) => {
         let usuarioAtualizadoRef = usuarioLogadoRef.current;
 
         if (Array.isArray(usersData) && usersData.length > 0) {
-          setUsuarios(usersData);
+          const usuariosMudaram =
+            usersData.length !== usuariosRef.current.length ||
+            JSON.stringify(usersData) !== JSON.stringify(usuariosRef.current);
+
+          if (usuariosMudaram) {
+            setUsuarios(usersData);
+          }
 
           // Sincroniza usuário autenticado com dados atualizados do servidor sem disparar re-render cíclico
           const userServidor = usersData.find(
@@ -529,11 +545,18 @@ export const ApiProvider = ({ children }) => {
           }
         }
         
-        // Sincroniza os posts apenas quando houver alteração real para evitar remount indevido da interface
+        // Sincroniza os posts apenas quando houver alteração real e preserva os criados localmente
         const postsProcessados = postsData.map((p) => processarPostServidor(p, usuarioAtualizadoRef));
+        const idsServidor = new Set(postsProcessados.map((p) => String(p.id)));
+        const postsLocaisRecentes = (postsRef.current || []).filter(
+          (p) => !idsServidor.has(String(p.id)) && Number(p.id) > 1000000
+        );
+
+        const todosPosts = ordenarPostsPorData([...postsProcessados, ...postsLocaisRecentes]);
+
         const postsDiferentes =
-          postsProcessados.length !== postsRef.current.length ||
-          postsProcessados.some((pServidor, index) => {
+          todosPosts.length !== postsRef.current.length ||
+          todosPosts.some((pServidor, index) => {
             const pLocal = postsRef.current[index];
             if (!pLocal) return true;
             return (
@@ -547,10 +570,18 @@ export const ApiProvider = ({ children }) => {
           });
 
         if (postsDiferentes) {
-          setPosts(ordenarPostsPorData(postsProcessados));
+          setPosts(todosPosts);
         }
 
-        setNotificacoes(ordenarNotificacoesPorData(Array.isArray(notifData) ? notifData : []));
+        const novasNotif = ordenarNotificacoesPorData(Array.isArray(notifData) ? notifData : []);
+        const notifMudaram =
+          novasNotif.length !== notificacoesRef.current.length ||
+          JSON.stringify(novasNotif) !== JSON.stringify(notificacoesRef.current);
+
+        if (notifMudaram) {
+          setNotificacoes(novasNotif);
+        }
+
         if (perfilData && perfilData.usuario && !usuarioAtualizadoRef) {
           setDadosPerfil({
             ...perfilData,

@@ -74,15 +74,11 @@ export default function ProfileScreen({
             aoCurtirPost={() => {}}
           />
         )}
-        {/* Aba 1 — Republicados */}
+        {/* Aba 1 — Comentários */}
         {abaAtiva === 1 && (
-          <GradePublicacoes
-            apenasRepublicados={true}
+          <SecaoComentarios
             dadosPerfil={dadosPerfil}
             postsCompartilhados={postsCompartilhados}
-            setPostsCompartilhados={setPostsCompartilhados}
-            aoAbrirPost={(post) => aoMudarTela && aoMudarTela("detalhes", post, "perfil")}
-            aoCurtirPost={() => {}}
           />
         )}
         {/* Aba 2 — Curtidas */}
@@ -96,11 +92,15 @@ export default function ProfileScreen({
             aoCurtirPost={() => {}}
           />
         )}
-        {/* Aba 3 — Comentários */}
+        {/* Aba 3 — Republicados */}
         {abaAtiva === 3 && (
-          <SecaoComentarios
+          <GradePublicacoes
+            apenasRepublicados={true}
             dadosPerfil={dadosPerfil}
             postsCompartilhados={postsCompartilhados}
+            setPostsCompartilhados={setPostsCompartilhados}
+            aoAbrirPost={(post) => aoMudarTela && aoMudarTela("detalhes", post, "perfil")}
+            aoCurtirPost={() => {}}
           />
         )}
       </ScrollView>

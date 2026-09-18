@@ -7,6 +7,7 @@ import {
   Image,
 } from "react-native";
 import { theme } from "../styles/theme";
+import { IconeCoracaoFeed } from "./IconesSvg";
 
 const ESPACAMENTO = 8;
 const DEBOUNCE_MS = 280;
@@ -44,43 +45,49 @@ export function GradePublicacoes({
     }
   };
 
-  const userTarget = (dadosPerfil?.usuario || dadosPerfil?.nome || "")
-    .trim()
-    .toLowerCase();
+  const userTargetUsuario = (dadosPerfil?.usuario || "").trim().toLowerCase();
+  const userTargetNome = (dadosPerfil?.nome || "").trim().toLowerCase();
   let postsFiltrados = postsCompartilhados || [];
 
   if (apenasPostados) {
     postsFiltrados = postsFiltrados.filter((p) => {
       const postUser = (p.user || p.usuario || "").trim().toLowerCase();
-      if (!userTarget) return true;
+      if (!userTargetUsuario && !userTargetNome) return true;
       return (
-        postUser === userTarget ||
-        (userTarget === "você" && postUser === "você")
+        (userTargetUsuario && postUser === userTargetUsuario) ||
+        (userTargetNome && postUser === userTargetNome) ||
+        postUser === "você"
       );
     });
   }
 
   if (apenasCurtidas) {
     postsFiltrados = postsFiltrados.filter((p) => {
-      // Aceita tanto a flag booleana quanto a lista de curtidores
       if (Boolean(p.curtido)) return true;
       const curtidores = Array.isArray(p.curtidores) ? p.curtidores : [];
-      return curtidores.some(
-        (u) => u.trim().toLowerCase() === userTarget
-      );
+      return curtidores.some((u) => {
+        const uLower = u.trim().toLowerCase();
+        return (
+          (userTargetUsuario && uLower === userTargetUsuario) ||
+          (userTargetNome && uLower === userTargetNome) ||
+          uLower === "você"
+        );
+      });
     });
   }
 
   if (apenasRepublicados) {
     postsFiltrados = postsFiltrados.filter((p) => {
-      // Aceita tanto a flag booleana quanto a lista de republicadores
       if (Boolean(p.republicado)) return true;
-      const republicadores = Array.isArray(p.republicadores)
-        ? p.republicadores
-        : [];
-      return republicadores.some(
-        (u) => u.trim().toLowerCase() === userTarget
-      );
+      const republicadores = Array.isArray(p.republicadores) ? p.republicadores : [];
+      return republicadores.some((u) => {
+        const uLower = u.trim().toLowerCase();
+        return (
+          (userTargetUsuario && uLower === userTargetUsuario) ||
+          (userTargetNome && uLower === userTargetNome) ||
+          uLower === "você"
+        );
+      });
     });
   }
 
@@ -111,43 +118,70 @@ export function GradePublicacoes({
 
   return (
     <View style={styles.container}>
-      {postsFiltrados.map((post) => (
-        <TouchableOpacity
-          key={post.id}
-          activeOpacity={0.85}
-          style={styles.itemPost}
-          onPress={() => lidarComToque(post)}
-        >
-          <View style={styles.conteudoPost}>
-            {post.image ? (
-              typeof post.image === "string" ? (
-                <Image
-                  source={{ uri: post.image }}
-                  style={styles.imagemPost}
-                  resizeMode="cover"
-                />
-              ) : (
-                <Image
-                  source={post.image}
-                  style={styles.imagemPost}
-                  resizeMode="cover"
-                />
-              )
-            ) : (
-              <View style={styles.cardTextoPreview}>
-                <Text style={styles.textoPreview} numberOfLines={3}>
-                  {post.text}
-                </Text>
-              </View>
-            )}
-          </View>
+      {postsFiltrados.map((post) => {
+        const estaCurtido =
+          Boolean(post.curtido) ||
+          apenasCurtidas ||
+          (Array.isArray(post.curtidores) &&
+            (userTargetUsuario || userTargetNome) &&
+            post.curtidores.some((u) => {
+              const uLower = u.trim().toLowerCase();
+              return (
+                (userTargetUsuario && uLower === userTargetUsuario) ||
+                (userTargetNome && uLower === userTargetNome) ||
+                uLower === "você"
+              );
+            }));
 
-          {/* Badge de feedback visual com contagem real */}
-          <View style={styles.badgeCurtidas}>
-            <Text style={styles.textoCurtidas}>❤️ {post.curtidas || 0}</Text>
-          </View>
-        </TouchableOpacity>
-      ))}
+        const corHeart = estaCurtido ? "#FF3B30" : "#FFFFFF";
+
+        return (
+          <TouchableOpacity
+            key={post.id}
+            activeOpacity={0.85}
+            style={styles.itemPost}
+            onPress={() => lidarComToque(post)}
+          >
+            <View style={styles.conteudoPost}>
+              {post.image ? (
+                typeof post.image === "string" ? (
+                  <Image
+                    source={{ uri: post.image }}
+                    style={styles.imagemPost}
+                    resizeMode="cover"
+                  />
+                ) : (
+                  <Image
+                    source={post.image}
+                    style={styles.imagemPost}
+                    resizeMode="cover"
+                  />
+                )
+              ) : (
+                <View style={styles.cardTextoPreview}>
+                  <Text style={styles.textoPreview} numberOfLines={3}>
+                    {post.text}
+                  </Text>
+                </View>
+              )}
+            </View>
+
+            {/* Badge de feedback visual com contagem real */}
+            <View style={styles.badgeCurtidas}>
+              <IconeCoracaoFeed tamanho={12} cor={corHeart} preenchido={estaCurtido} />
+              <Text
+                style={[
+                  styles.textoCurtidas,
+                  { marginLeft: 4 },
+                  estaCurtido && { color: "#FFFFFF" },
+                ]}
+              >
+                {post.curtidas || 0}
+              </Text>
+            </View>
+          </TouchableOpacity>
+        );
+      })}
     </View>
   );
 }

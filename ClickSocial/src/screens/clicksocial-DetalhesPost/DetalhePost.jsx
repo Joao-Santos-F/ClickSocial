@@ -17,8 +17,9 @@ import setaE from "../../../assets/incon_seta-esquerda.png";
 import iconLixeira from "../../../assets/Lixeira.png";
 import avatarDefault from "../../../assets/WhatsApp Image 2026-08-25 at 11.25.57 2.png";
 import { useApi } from "../../context/ApiContext";
+import { IconeCoracaoFeed } from "../../components/IconesSvg";
 
-// Coração SVG-like via emoji para garantir estado visual correto em iOS/Android
+// Coração SVG padronizado com o Figma
 function BotaoCoracao({ curtido, onPress }) {
   return (
     <TouchableOpacity
@@ -27,9 +28,11 @@ function BotaoCoracao({ curtido, onPress }) {
       activeOpacity={0.7}
       hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
     >
-      <Text style={{ fontSize: 26, lineHeight: 30 }}>
-        {curtido ? "❤️" : "🤍"}
-      </Text>
+      <IconeCoracaoFeed
+        tamanho={24}
+        cor={curtido ? "#FF3B30" : "#6E6A82"}
+        preenchido={curtido}
+      />
     </TouchableOpacity>
   );
 }
@@ -214,28 +217,7 @@ export const DetalhesPost = ({
                   <Image source={setaE} style={DetalhePostStyles.headerIcon} />
                 </TouchableOpacity>
                 <Text style={DetalhePostStyles.headerTitle}>Publicação</Text>
-                {/* Botão Lixeira — visível apenas se onExcluir estiver disponível */}
-                {onExcluir ? (
-                  <TouchableOpacity
-                    onPress={() => onExcluir(post?.id)}
-                    style={DetalhePostStyles.headerIconBtn}
-                    activeOpacity={0.7}
-                    hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
-                    accessibilityRole="button"
-                    accessibilityLabel="Excluir publicação"
-                  >
-                    <Image
-                      source={iconLixeira}
-                      style={[
-                        DetalhePostStyles.headerIcon,
-                        { tintColor: "#FF3B30" },
-                      ]}
-                      resizeMode="contain"
-                    />
-                  </TouchableOpacity>
-                ) : (
-                  <View style={DetalhePostStyles.headerPlaceholder} />
-                )}
+                <View style={DetalhePostStyles.headerPlaceholder} />
               </View>
 
               {/* Autor */}
@@ -278,37 +260,6 @@ export const DetalhesPost = ({
                 <Text style={DetalhePostStyles.postText}>{postTexto}</Text>
               )}
 
-              {/* Tags */}
-              {tags.length > 0 && (
-                <View
-                  style={{
-                    flexDirection: "row",
-                    flexWrap: "wrap",
-                    gap: 6,
-                    marginTop: 8,
-                    marginBottom: 4,
-                  }}
-                >
-                  {tags.map((tag, i) => (
-                    <View
-                      key={`${tag}-${i}`}
-                      style={{
-                        backgroundColor: "#2D1F5E",
-                        borderRadius: 12,
-                        paddingHorizontal: 10,
-                        paddingVertical: 3,
-                      }}
-                    >
-                      <Text
-                        style={{ color: "#A78BFA", fontSize: 12, fontWeight: "600" }}
-                      >
-                        #{tag}
-                      </Text>
-                    </View>
-                  ))}
-                </View>
-              )}
-
               {/* Localização do Post */}
               {Boolean(localizacao) && (
                 <Text style={DetalhePostStyles.locationText}>
@@ -349,17 +300,35 @@ export const DetalhesPost = ({
                 </View>
               )}
 
-              {/* Curtidas — coração SVG-like via emoji (sem tintColor instável) */}
+              {/* Curtidas & Ações */}
               <View style={DetalhePostStyles.likesRow}>
-                <BotaoCoracao curtido={curtido} onPress={handleLike} />
-                <Text
-                  style={[
-                    DetalhePostStyles.likesCount,
-                    curtido && { color: "#E0245E", fontWeight: "bold" },
-                  ]}
-                >
-                  {likes}
-                </Text>
+                <View style={DetalhePostStyles.likesLeftGroup}>
+                  <BotaoCoracao curtido={curtido} onPress={handleLike} />
+                  <Text
+                    style={[
+                      DetalhePostStyles.likesCount,
+                      curtido && { color: "#E0245E", fontWeight: "bold" },
+                    ]}
+                  >
+                    {likes}
+                  </Text>
+                </View>
+                {Boolean(onExcluir) && (
+                  <TouchableOpacity
+                    onPress={() => onExcluir(post?.id)}
+                    style={DetalhePostStyles.trashBtn}
+                    activeOpacity={0.7}
+                    hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                    accessibilityRole="button"
+                    accessibilityLabel="Excluir publicação"
+                  >
+                    <Image
+                      source={iconLixeira}
+                      style={DetalhePostStyles.trashIcon}
+                      resizeMode="contain"
+                    />
+                  </TouchableOpacity>
+                )}
               </View>
 
               {/* Botão Ver comentários */}
