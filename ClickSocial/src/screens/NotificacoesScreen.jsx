@@ -72,7 +72,12 @@ export default function NotificacoesScreen({
   notificacoesLista,
 }) {
   const lidarNavegacao = aoMudarTela || aoNavegarAba;
-  const listaBruta = notificacoesLista || notificacoes || NOTIFICACOES_PADRAO;
+  const listaBruta = Array.isArray(notificacoesLista)
+    ? notificacoesLista
+    : Array.isArray(notificacoes)
+    ? notificacoes
+    : NOTIFICACOES_PADRAO;
+
   const listaNotificacoes = React.useMemo(() => {
     return ordenarNotificacoesPorData(listaBruta);
   }, [listaBruta]);
@@ -83,8 +88,12 @@ export default function NotificacoesScreen({
     if (item.tipo === "seguir") {
       lidarNavegacao("perfil");
     } else {
-      const postAlvo = posts.find((p) => p.id === item.postId) || posts[0];
-      lidarNavegacao("detalhes", postAlvo, "notificacao");
+      const postAlvo = posts.find((p) => String(p.id) === String(item.postId)) || posts[0];
+      if (postAlvo) {
+        lidarNavegacao("detalhes", postAlvo, "notificacao");
+      } else {
+        lidarNavegacao("feed");
+      }
     }
   };
 
@@ -143,29 +152,35 @@ export default function NotificacoesScreen({
               showsVerticalScrollIndicator={false}
               contentContainerStyle={styles.listaConteudo}
             >
-              {listaNotificacoes.map((item, index) => (
-                <React.Fragment key={item.id}>
-                  <TouchableOpacity
-                    style={styles.itemNotificacao}
-                    activeOpacity={0.7}
-                    onPress={() => lidarCliqueNotificacao(item)}
-                  >
-                    <View style={styles.containerIcone}>
-                      {renderizarIcone(item.tipo)}
-                    </View>
-                    <View style={styles.containerTexto}>
-                      <Text style={styles.textoMensagem}>
-                        <Text style={styles.nomeUsuario}>{item.usuario}</Text>{" "}
-                        <Text style={styles.acaoTexto}>{item.texto}</Text>
-                      </Text>
-                      <Text style={styles.horarioTexto}>{item.horario}</Text>
-                    </View>
-                  </TouchableOpacity>
-                  {index < listaNotificacoes.length - 1 && (
-                    <View style={styles.divisorLinhaItem} />
-                  )}
-                </React.Fragment>
-              ))}
+              {listaNotificacoes.length === 0 ? (
+                <View style={styles.containerVazio}>
+                  <Text style={styles.textoVazio}>Nenhuma notificação por enquanto</Text>
+                </View>
+              ) : (
+                listaNotificacoes.map((item, index) => (
+                  <React.Fragment key={item.id}>
+                    <TouchableOpacity
+                      style={styles.itemNotificacao}
+                      activeOpacity={0.7}
+                      onPress={() => lidarCliqueNotificacao(item)}
+                    >
+                      <View style={styles.containerIcone}>
+                        {renderizarIcone(item.tipo)}
+                      </View>
+                      <View style={styles.containerTexto}>
+                        <Text style={styles.textoMensagem}>
+                          <Text style={styles.nomeUsuario}>{item.usuario}</Text>{" "}
+                          <Text style={styles.acaoTexto}>{item.texto}</Text>
+                        </Text>
+                        <Text style={styles.horarioTexto}>{item.horario}</Text>
+                      </View>
+                    </TouchableOpacity>
+                    {index < listaNotificacoes.length - 1 && (
+                      <View style={styles.divisorLinhaItem} />
+                    )}
+                  </React.Fragment>
+                ))
+              )}
             </ScrollView>
           </View>
         </View>
@@ -261,5 +276,15 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: "#E2E0EC",
     marginHorizontal: 16,
+  },
+  containerVazio: {
+    paddingVertical: 40,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  textoVazio: {
+    fontSize: 15,
+    color: theme.colors.textSecondary,
+    fontWeight: "500",
   },
 });

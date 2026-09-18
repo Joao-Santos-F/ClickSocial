@@ -30,107 +30,12 @@ const getApiBaseUrl = () => {
 
 const API_BASE_URL = getApiBaseUrl();
 
-const USUARIOS_INICIAIS = [
-  {
-    id: "u1",
-    nome: "Arthur Batista",
-    usuario: "Arthurbr-YT",
-    email: "arthur@clicksocial.com",
-    senha: "123",
-    bio: "Criador de conteúdo e explorador de ideias.",
-    verificado: true,
-    seguidores: "26,2K",
-    seguindo: 17,
-    imagemPerfil: require("../../assets/WhatsApp Image 2026-08-25 at 11.25.57 2.png"),
-  },
-  {
-    id: "u2",
-    nome: "Eduardo Torolho",
-    usuario: "Eduardo Torolho",
-    email: "eduardo@clicksocial.com",
-    senha: "123",
-    bio: "É o goat não tem jeito 🔥🔥",
-    verificado: false,
-    seguidores: 120,
-    seguindo: 45,
-    imagemPerfil: require("../../assets/top amigo 2.png"),
-  },
-];
+const USUARIOS_INICIAIS = [];
 
 const DADOS_INICIAIS = {
-  posts: [
-    {
-      id: "1",
-      createdAt: 1789500000000,
-      user: "Arthurbr-YT",
-      time: "Há 2 horas",
-      text: "Acabei de publicar um novo conteúdo no canal! Vamos juntos explorar novas ideias e aprender coisas novas.",
-      accent: "#5ef9d6",
-      avatar: require("../../assets/WhatsApp Image 2026-08-25 at 11.25.57 2.png"),
-      image: require("../../assets/12 Sem Título_20260828133808.jpg"),
-      curtidas: 124,
-      curtidores: ["Arthurbr-YT"],
-      curtido: true,
-      comentariosCount: 120,
-      republicado: true,
-      republicadores: ["Arthurbr-YT"],
-      tags: ["Canal", "ClickSocial", "Tech"],
-      comentarios: [
-        { id: "c1", autor: "Lucas M.", texto: "Sensacional demais!", curtidas: 5, curtido: false, respostas: 0 },
-        { id: "c2", autor: "Beatriz R.", texto: "Parabéns, ficou incrível!", curtidas: 12, curtido: true, respostas: 0 },
-      ],
-    },
-    {
-      id: "2",
-      createdAt: 1789400000000,
-      user: "Outro Cara",
-      time: "Ontem",
-      text: "Só eu que acho que o @Arthurbr-YT é uma mona chata? Tipo é, tipo an, tipo nada havê",
-      accent: "#74f7c7",
-      avatar: require("../../assets/WhatsApp Image 2026-08-25 at 11.25.57 2.png"),
-      image: require("../../assets/1212.jpg"),
-      curtidas: 89,
-      curtidores: ["Outro Cara"],
-      curtido: true,
-      comentariosCount: 45,
-      republicado: false,
-      republicadores: [],
-      tags: ["Opinião", "ClickSocial"],
-      comentarios: [
-        { id: "c3", autor: "Eduardo Torolho", texto: "Nada a ver man", curtidas: 2, curtido: false, respostas: 0 },
-      ],
-    },
-    {
-      id: "3",
-      createdAt: 1789300000000,
-      user: "Eduardo Torolho",
-      time: "Ontem",
-      text: "É o goat não tem jeito 🔥🔥",
-      accent: "#74f7c7",
-      avatar: require("../../assets/top amigo 2.png"),
-      image: null,
-      curtidas: 452,
-      curtidores: ["Eduardo Torolho"],
-      curtido: false,
-      comentariosCount: 12,
-      republicado: true,
-      republicadores: ["Eduardo Torolho"],
-      tags: ["Goat", "Fogo", "EstradaCataPreta"],
-      comentarios: [
-        { id: "c4", autor: "Arthurbr-YT", texto: "Valeu demais!", curtidas: 18, curtido: true, respostas: 0 },
-      ],
-    },
-  ],
+  posts: [],
   notificacoes: [],
-  perfil: {
-    nome: "Arthur Batista",
-    usuario: "Arthurbr-YT",
-    bio: "Criador de conteúdo e explorador de ideias.",
-    verificado: true,
-    seguidores: "26,2K",
-    seguindo: 17,
-    imagemPerfil: require("../../assets/WhatsApp Image 2026-08-25 at 11.25.57 2.png"),
-  },
+  perfil: null,
 };
 
 // Auxiliar de ordenação cronológica inversa de posts (mais novos no topo)
@@ -327,7 +232,7 @@ export const ApiProvider = ({ children }) => {
         if (salvo) return JSON.parse(salvo);
       }
     } catch (e) {}
-    return USUARIOS_INICIAIS[0];
+    return null;
   });
 
   const setUsuarioLogado = (user) => {
@@ -360,13 +265,13 @@ export const ApiProvider = ({ children }) => {
             }
             return {
               ...parsed,
-              imagemPerfil: img || DADOS_INICIAIS.perfil.imagemPerfil,
+              imagemPerfil: img || require("../../assets/WhatsApp Image 2026-08-25 at 11.25.57 2.png"),
             };
           }
         }
       }
     } catch (e) {}
-    return DADOS_INICIAIS.perfil;
+    return null;
   });
 
   const setDadosPerfil = (perfil) => {
@@ -465,7 +370,7 @@ export const ApiProvider = ({ children }) => {
     return {
       ...p,
       createdAt: p.createdAt || (Number(p.id) > 1000000 ? Number(p.id) : Date.now() - 86400000),
-      avatar: avatarResolved || DADOS_INICIAIS.posts[0].avatar,
+      avatar: avatarResolved || require("../../assets/WhatsApp Image 2026-08-25 at 11.25.57 2.png"),
       image: imageResolved,
       curtidores,
       republicadores,
@@ -588,7 +493,7 @@ export const ApiProvider = ({ children }) => {
             verificado: perfilData.verificado || false,
             seguidores: perfilData.seguidores ?? 0,
             seguindo: perfilData.seguindo ?? 0,
-            imagemPerfil: perfilData.fotoUri ? { uri: perfilData.fotoUri } : DADOS_INICIAIS.perfil.imagemPerfil,
+            imagemPerfil: perfilData.fotoUri ? { uri: perfilData.fotoUri } : require("../../assets/WhatsApp Image 2026-08-25 at 11.25.57 2.png"),
           });
         }
         setIsOnline(true);
@@ -1103,7 +1008,7 @@ export const ApiProvider = ({ children }) => {
     const fotoUriPermanente = fotoUriRaw ? await resolverUriPermanente(fotoUriRaw) : null;
     const imagemPerfilFinal = fotoUriPermanente
       ? { uri: fotoUriPermanente }
-      : (novosDados.imagemPerfil || dadosPerfil?.imagemPerfil || DADOS_INICIAIS.perfil.imagemPerfil);
+      : (novosDados.imagemPerfil || dadosPerfil?.imagemPerfil || require("../../assets/WhatsApp Image 2026-08-25 at 11.25.57 2.png"));
 
     const perfilAtualizado = {
       ...dadosPerfil,

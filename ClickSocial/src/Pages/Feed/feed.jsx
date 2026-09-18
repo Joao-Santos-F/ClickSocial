@@ -21,50 +21,7 @@ import {
   IconeTabRepost,
 } from "../../components/IconesSvg";
 
-const POSTS_PADRAO = [
-  {
-    id: 1,
-    user: "Arthurbr-YT",
-    time: "Há 2 horas",
-    text: "Acabei de publicar um novo conteúdo no canal! Vamos juntos explorar novas ideias e aprender coisas novas.",
-    accent: "#5ef9d6",
-    avatar: require("../../../assets/WhatsApp Image 2026-08-25 at 11.25.57 2.png"),
-    image: require("../../../assets/12 Sem Título_20260828133808.jpg"),
-    curtidas: 1900,
-    curtido: false,
-    comentariosCount: 120,
-    republicado: false,
-    tags: ["#Canal", "#ClickSocial", "#Tech"],
-  },
-  {
-    id: 2,
-    user: "Outro Cara",
-    time: "Ontem",
-    text: "Só eu que acho que o @Arthurbr-YT é uma mona chata? Tipo é, tipo an, tipo nada havê",
-    accent: "#74f7c7",
-    avatar: require("../../../assets/WhatsApp Image 2026-08-25 at 11.25.57 2.png"),
-    image: require("../../../assets/1212.jpg"),
-    curtidas: 840,
-    curtido: false,
-    comentariosCount: 45,
-    republicado: false,
-    tags: ["#Opinião", "#ClickSocial"],
-  },
-  {
-    id: 3,
-    user: "Eduardo Torolho",
-    time: "Ontem",
-    text: "É o goat não tem jeito 🔥🔥",
-    accent: "#74f7c7",
-    avatar: require("../../../assets/top amigo 2.png"),
-    image: null,
-    curtidas: 320,
-    curtido: true,
-    comentariosCount: 12,
-    republicado: true,
-    tags: ["#Goat", "#Fogo"],
-  },
-];
+const POSTS_PADRAO = [];
 
 function Artwork({ accent }) {
   return (
@@ -216,7 +173,17 @@ export default function Feed({
             contentContainerStyle={Feedstyles.feedContent}
             showsVerticalScrollIndicator={false}
           >
-            {postsExibidos.map((post) => (
+            {postsExibidos.length === 0 ? (
+              <View style={{ paddingVertical: 60, alignItems: "center", justifyContent: "center" }}>
+                <Text style={{ fontSize: 16, color: "#9CA3AF", fontWeight: "500", textAlign: "center" }}>
+                  Nenhuma publicação no feed por enquanto.
+                </Text>
+                <Text style={{ fontSize: 13, color: "#6B7280", marginTop: 8, textAlign: "center" }}>
+                  Seja o primeiro a publicar clicando no botão +
+                </Text>
+              </View>
+            ) : (
+              postsExibidos.map((post) => (
               <View key={post.id} style={Feedstyles.PostCard}>
                 <View style={Feedstyles.PostHeader}>
                   <View style={Feedstyles.AvatarWrap}>
@@ -323,7 +290,8 @@ export default function Feed({
                   </View>
                 </View>
               </View>
-            ))}
+            ))
+          )}
           </ScrollView>
         </View>
 
