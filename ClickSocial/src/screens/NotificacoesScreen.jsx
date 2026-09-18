@@ -18,6 +18,7 @@ import { IconeMensagemFeed, IconeTabRepost, IconeLogoFeed } from "../components/
 import { ordenarNotificacoesPorData } from "../context/ApiContext";
 import iconCoracao from "../../assets/incon_coracao.png";
 import iconSeguidor from "../../assets/incon_seguidor.png";
+import iconNotificacao from "../../assets/incon_notificacao.png";
 
 const NOTIFICACOES_PADRAO = [
   {
@@ -98,7 +99,13 @@ export default function NotificacoesScreen({
           />
         );
       case "comentario":
-        return <IconeMensagemFeed tamanho={24} cor="#110D20" />;
+        return (
+          <Image
+            source={iconNotificacao}
+            style={styles.iconeImagem}
+            resizeMode="contain"
+          />
+        );
       case "repost":
         return <IconeTabRepost tamanho={24} cor="#00C853" />;
       case "post":

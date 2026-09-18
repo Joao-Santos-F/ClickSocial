@@ -53,21 +53,34 @@ function FaceCard({ post, onPress }) {
 export default function Pesquisa({ telaAtiva = "pesquisa", aoMudarTela, posts = [] }) {
   const [searchText, setSearchText] = useState('');
 
-  const busca = searchText.trim().toLowerCase();
+  // Normaliza uma string: remove acentos, hashtag, espaços extras e converte para minúsculas
+  const normalizar = (str = '') =>
+    String(str)
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // remove acentos
+      .replace(/#/g, '')               // remove hashtag
+      .trim()
+      .toLowerCase();
+
+  const busca = normalizar(searchText);
 
   const postsFiltrados = posts.filter((p) => {
     if (!busca) return true;
 
     // Busca no texto do post
-    const bateuTexto = p.text && p.text.toLowerCase().includes(busca);
-    // Busca no usuário
-    const bateuUser = p.user && p.user.toLowerCase().includes(busca);
+    const bateuTexto = normalizar(p.text).includes(busca) || normalizar(p.texto).includes(busca);
+    // Busca no usuário / autor
+    const bateuUser = normalizar(p.user).includes(busca) || normalizar(p.autor).includes(busca);
     // Busca nas tags
-    const bateuTag = p.tags && p.tags.some((t) => t.toLowerCase().includes(busca));
-    // Busca nos comentários
-    const bateuComentario = p.comentarios && p.comentarios.some(
-      (c) => (c.texto && c.texto.toLowerCase().includes(busca)) || (c.autor && c.autor.toLowerCase().includes(busca))
-    );
+    const bateuTag =
+      Array.isArray(p.tags) && p.tags.some((t) => normalizar(t).includes(busca));
+    // Busca nos comentários (texto e autor)
+    const bateuComentario =
+      Array.isArray(p.comentarios) &&
+      p.comentarios.some(
+        (c) =>
+          normalizar(c.texto).includes(busca) || normalizar(c.autor).includes(busca)
+      );
 
     return bateuTexto || bateuUser || bateuTag || bateuComentario;
   });

@@ -14,18 +14,45 @@ import { LinearGradient } from "expo-linear-gradient";
 
 import { DetalhePostStyles } from "./DetalhePost.js";
 import setaE from "../../../assets/incon_seta-esquerda.png";
-import iconCoracao from "../../../assets/incon_coracao.png";
+import iconLixeira from "../../../assets/Lixeira.png";
 import avatarDefault from "../../../assets/WhatsApp Image 2026-08-25 at 11.25.57 2.png";
 import { useApi } from "../../context/ApiContext";
 
-export const DetalhesPost = ({ onVoltar, onVerComentarios, post, aoCurtirPost, aoAdicionarComentario }) => {
-  const { usuarios = [], dadosPerfil = {}, adicionarComentario: adicionarComentarioApi } = useApi();
+// Coração SVG-like via emoji para garantir estado visual correto em iOS/Android
+function BotaoCoracao({ curtido, onPress }) {
+  return (
+    <TouchableOpacity
+      style={DetalhePostStyles.likeButton}
+      onPress={onPress}
+      activeOpacity={0.7}
+      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+    >
+      <Text style={{ fontSize: 26, lineHeight: 30 }}>
+        {curtido ? "❤️" : "🤍"}
+      </Text>
+    </TouchableOpacity>
+  );
+}
+
+export const DetalhesPost = ({
+  onVoltar,
+  onVerComentarios,
+  post,
+  aoCurtirPost,
+  aoAdicionarComentario,
+  onExcluir,
+}) => {
+  const {
+    usuarios = [],
+    dadosPerfil = {},
+    adicionarComentario: adicionarComentarioApi,
+  } = useApi();
 
   const [curtido, setCurtido] = useState(Boolean(post?.curtido));
   const [likes, setLikes] = useState(
     post?.curtidas !== undefined && post?.curtidas !== null
       ? Number(post.curtidas)
-      : (post?.likes ?? 0)
+      : post?.likes ?? 0
   );
   const [mostrarComentarios, setMostrarComentarios] = useState(false);
   const [novoComentario, setNovoComentario] = useState("");
@@ -37,7 +64,7 @@ export const DetalhesPost = ({ onVoltar, onVerComentarios, post, aoCurtirPost, a
       setLikes(
         post.curtidas !== undefined && post.curtidas !== null
           ? Number(post.curtidas)
-          : (post.likes ?? 0)
+          : post.likes ?? 0
       );
       setComentarios(post.comentarios || []);
     }
@@ -51,6 +78,7 @@ export const DetalhesPost = ({ onVoltar, onVerComentarios, post, aoCurtirPost, a
   const postTexto = post?.text || post?.texto || "";
   const rawImagem = post?.image || post?.imagem || null;
   const localizacao = post?.localizacao || null;
+  const tags = Array.isArray(post?.tags) ? post.tags : [];
 
   // Resolver foto real do autor do post
   const autorMatch = usuarios.find(
@@ -61,24 +89,26 @@ export const DetalhesPost = ({ onVoltar, onVerComentarios, post, aoCurtirPost, a
 
   const postAvatar =
     (autorMatch?.fotoUri ? { uri: autorMatch.fotoUri } : null) ||
-    (autorMatch?.imagemPerfil ? (typeof autorMatch.imagemPerfil === "string" ? { uri: autorMatch.imagemPerfil } : autorMatch.imagemPerfil) : null) ||
-    (dadosPerfil?.usuario?.toLowerCase() === (post?.user || "").toLowerCase() || dadosPerfil?.nome?.toLowerCase() === (post?.user || "").toLowerCase()
-      ? (dadosPerfil?.fotoUri ? { uri: dadosPerfil.fotoUri } : dadosPerfil?.imagemPerfil)
+    (autorMatch?.imagemPerfil
+      ? typeof autorMatch.imagemPerfil === "string"
+        ? { uri: autorMatch.imagemPerfil }
+        : autorMatch.imagemPerfil
+      : null) ||
+    (dadosPerfil?.usuario?.toLowerCase() ===
+      (post?.user || "").toLowerCase() ||
+    dadosPerfil?.nome?.toLowerCase() === (post?.user || "").toLowerCase()
+      ? dadosPerfil?.fotoUri
+        ? { uri: dadosPerfil.fotoUri }
+        : dadosPerfil?.imagemPerfil
       : null) ||
     post?.avatar ||
     avatarDefault;
 
   const handleLike = () => {
-    if (curtido) {
-      setCurtido(false);
-      setLikes(Math.max(0, likes - 1));
-    } else {
-      setCurtido(true);
-      setLikes(likes + 1);
-    }
-    if (aoCurtirPost) {
-      aoCurtirPost();
-    }
+    const novoCurtido = !curtido;
+    setCurtido(novoCurtido);
+    setLikes((prev) => (novoCurtido ? prev + 1 : Math.max(0, prev - 1)));
+    if (aoCurtirPost) aoCurtirPost();
   };
 
   const handleAdicionarComentario = async () => {
@@ -87,9 +117,9 @@ export const DetalhesPost = ({ onVoltar, onVerComentarios, post, aoCurtirPost, a
     setNovoComentario("");
 
     const avatarComentario =
-      (dadosPerfil?.fotoUri ? { uri: dadosPerfil.fotoUri } : null) ||
-      dadosPerfil?.imagemPerfil ||
-      avatarDefault;
+      dadosPerfil?.fotoUri
+        ? { uri: dadosPerfil.fotoUri }
+        : dadosPerfil?.imagemPerfil || avatarDefault;
 
     const novoObj = {
       id: String(Date.now()),
@@ -117,12 +147,17 @@ export const DetalhesPost = ({ onVoltar, onVerComentarios, post, aoCurtirPost, a
 
   const resolverAvatarComentario = (c) => {
     if (c?.avatar) {
-      if (typeof c.avatar === "object" && c.avatar.uri) return { uri: c.avatar.uri };
+      if (typeof c.avatar === "object" && c.avatar.uri)
+        return { uri: c.avatar.uri };
       if (typeof c.avatar === "string") {
-        if (c.avatar.startsWith("data:") || c.avatar.startsWith("http") || c.avatar.startsWith("blob:")) {
+        if (
+          c.avatar.startsWith("data:") ||
+          c.avatar.startsWith("http") ||
+          c.avatar.startsWith("blob:")
+        )
           return { uri: c.avatar };
-        }
-        if (c.avatar.includes("top amigo")) return require("../../../assets/top amigo 2.png");
+        if (c.avatar.includes("top amigo"))
+          return require("../../../assets/top amigo 2.png");
         if (c.avatar.includes("WhatsApp")) return avatarDefault;
       }
       if (typeof c.avatar === "number") return c.avatar;
@@ -132,8 +167,8 @@ export const DetalhesPost = ({ onVoltar, onVerComentarios, post, aoCurtirPost, a
     if (
       dadosPerfil &&
       (autorComent === (dadosPerfil.usuario || "").toLowerCase() ||
-       autorComent === (dadosPerfil.nome || "").toLowerCase() ||
-       autorComent === "você")
+        autorComent === (dadosPerfil.nome || "").toLowerCase() ||
+        autorComent === "você")
     ) {
       if (dadosPerfil.fotoUri) return { uri: dadosPerfil.fotoUri };
       if (dadosPerfil.imagemPerfil) return dadosPerfil.imagemPerfil;
@@ -179,33 +214,99 @@ export const DetalhesPost = ({ onVoltar, onVerComentarios, post, aoCurtirPost, a
                   <Image source={setaE} style={DetalhePostStyles.headerIcon} />
                 </TouchableOpacity>
                 <Text style={DetalhePostStyles.headerTitle}>Publicação</Text>
-                <View style={DetalhePostStyles.headerPlaceholder} />
+                {/* Botão Lixeira — visível apenas se onExcluir estiver disponível */}
+                {onExcluir ? (
+                  <TouchableOpacity
+                    onPress={() => onExcluir(post?.id)}
+                    style={DetalhePostStyles.headerIconBtn}
+                    activeOpacity={0.7}
+                    hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+                    accessibilityRole="button"
+                    accessibilityLabel="Excluir publicação"
+                  >
+                    <Image
+                      source={iconLixeira}
+                      style={[
+                        DetalhePostStyles.headerIcon,
+                        { tintColor: "#FF3B30" },
+                      ]}
+                      resizeMode="contain"
+                    />
+                  </TouchableOpacity>
+                ) : (
+                  <View style={DetalhePostStyles.headerPlaceholder} />
+                )}
               </View>
 
               {/* Autor */}
               <View style={DetalhePostStyles.authorRow}>
                 {typeof postAvatar === "object" && postAvatar?.uri ? (
-                  <Image source={{ uri: postAvatar.uri }} style={DetalhePostStyles.avatar} />
-                ) : typeof postAvatar === "string" && (postAvatar.startsWith("http") || postAvatar.startsWith("blob:") || postAvatar.startsWith("data:")) ? (
-                  <Image source={{ uri: postAvatar }} style={DetalhePostStyles.avatar} />
+                  <Image
+                    source={{ uri: postAvatar.uri }}
+                    style={DetalhePostStyles.avatar}
+                  />
+                ) : typeof postAvatar === "string" &&
+                  (postAvatar.startsWith("http") ||
+                    postAvatar.startsWith("blob:") ||
+                    postAvatar.startsWith("data:")) ? (
+                  <Image
+                    source={{ uri: postAvatar }}
+                    style={DetalhePostStyles.avatar}
+                  />
                 ) : (
                   <Image
-                    source={typeof postAvatar === "number" || typeof postAvatar === "object" ? postAvatar : avatarDefault}
+                    source={
+                      typeof postAvatar === "number" ||
+                      typeof postAvatar === "object"
+                        ? postAvatar
+                        : avatarDefault
+                    }
                     style={DetalhePostStyles.avatar}
                   />
                 )}
                 <View style={DetalhePostStyles.authorInfo}>
                   <Text style={DetalhePostStyles.authorName}>{autorNome}</Text>
-                  <Text style={DetalhePostStyles.authorUsername}>{autorUsername}</Text>
+                  <Text style={DetalhePostStyles.authorUsername}>
+                    {autorUsername}
+                  </Text>
                   <Text style={DetalhePostStyles.authorTime}>{autorTime}</Text>
                 </View>
               </View>
 
               {/* Texto do Post */}
               {Boolean(postTexto) && (
-                <Text style={DetalhePostStyles.postText}>
-                  {postTexto}
-                </Text>
+                <Text style={DetalhePostStyles.postText}>{postTexto}</Text>
+              )}
+
+              {/* Tags */}
+              {tags.length > 0 && (
+                <View
+                  style={{
+                    flexDirection: "row",
+                    flexWrap: "wrap",
+                    gap: 6,
+                    marginTop: 8,
+                    marginBottom: 4,
+                  }}
+                >
+                  {tags.map((tag, i) => (
+                    <View
+                      key={`${tag}-${i}`}
+                      style={{
+                        backgroundColor: "#2D1F5E",
+                        borderRadius: 12,
+                        paddingHorizontal: 10,
+                        paddingVertical: 3,
+                      }}
+                    >
+                      <Text
+                        style={{ color: "#A78BFA", fontSize: 12, fontWeight: "600" }}
+                      >
+                        #{tag}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
               )}
 
               {/* Localização do Post */}
@@ -215,7 +316,7 @@ export const DetalhesPost = ({ onVoltar, onVerComentarios, post, aoCurtirPost, a
                 </Text>
               )}
 
-              {/* Imagem do Post (renderizada apenas se existir imagem real no post) */}
+              {/* Imagem do Post */}
               {Boolean(rawImagem) && (
                 <View style={DetalhePostStyles.imageContainer}>
                   {typeof rawImagem === "object" && rawImagem?.uri ? (
@@ -224,7 +325,10 @@ export const DetalhesPost = ({ onVoltar, onVerComentarios, post, aoCurtirPost, a
                       style={DetalhePostStyles.postImage}
                       resizeMode="cover"
                     />
-                  ) : typeof rawImagem === "string" && (rawImagem.startsWith("http") || rawImagem.startsWith("blob:") || rawImagem.startsWith("data:")) ? (
+                  ) : typeof rawImagem === "string" &&
+                    (rawImagem.startsWith("http") ||
+                      rawImagem.startsWith("blob:") ||
+                      rawImagem.startsWith("data:")) ? (
                     <Image
                       source={{ uri: rawImagem }}
                       style={DetalhePostStyles.postImage}
@@ -232,7 +336,12 @@ export const DetalhesPost = ({ onVoltar, onVerComentarios, post, aoCurtirPost, a
                     />
                   ) : (
                     <Image
-                      source={typeof rawImagem === "number" || typeof rawImagem === "object" ? rawImagem : null}
+                      source={
+                        typeof rawImagem === "number" ||
+                        typeof rawImagem === "object"
+                          ? rawImagem
+                          : null
+                      }
                       style={DetalhePostStyles.postImage}
                       resizeMode="cover"
                     />
@@ -240,39 +349,32 @@ export const DetalhesPost = ({ onVoltar, onVerComentarios, post, aoCurtirPost, a
                 </View>
               )}
 
-              {/* Curtidas */}
+              {/* Curtidas — coração SVG-like via emoji (sem tintColor instável) */}
               <View style={DetalhePostStyles.likesRow}>
-                <TouchableOpacity
-                  style={DetalhePostStyles.likeButton}
-                  onPress={handleLike}
-                  activeOpacity={0.7}
+                <BotaoCoracao curtido={curtido} onPress={handleLike} />
+                <Text
+                  style={[
+                    DetalhePostStyles.likesCount,
+                    curtido && { color: "#E0245E", fontWeight: "bold" },
+                  ]}
                 >
-                  <Image
-                    source={iconCoracao}
-                    style={[
-                      DetalhePostStyles.heartIcon,
-                      { tintColor: curtido ? "#E0245E" : "#8E8A9E" },
-                    ]}
-                  />
-                  <Text
-                    style={[
-                      DetalhePostStyles.likesCount,
-                      curtido && { color: "#E0245E", fontWeight: "bold" },
-                    ]}
-                  >
-                    {likes}
-                  </Text>
-                </TouchableOpacity>
+                  {likes}
+                </Text>
               </View>
 
-              {/* Link / Botão Ver comentários */}
+              {/* Botão Ver comentários */}
               <TouchableOpacity
                 style={DetalhePostStyles.commentsButton}
-                onPress={onVerComentarios || (() => setMostrarComentarios(!mostrarComentarios))}
+                onPress={
+                  onVerComentarios ||
+                  (() => setMostrarComentarios(!mostrarComentarios))
+                }
                 activeOpacity={0.7}
               >
                 <Text style={DetalhePostStyles.commentsText}>
-                  {mostrarComentarios ? "Ocultar comentários" : "Ver comentários...."}
+                  {mostrarComentarios
+                    ? "Ocultar comentários"
+                    : "Ver comentários...."}
                 </Text>
               </TouchableOpacity>
 
@@ -282,17 +384,57 @@ export const DetalhesPost = ({ onVoltar, onVerComentarios, post, aoCurtirPost, a
                   {comentarios.map((c, index) => {
                     const avatarFonteC = resolverAvatarComentario(c);
                     return (
-                      <View key={c.id || index} style={[DetalhePostStyles.commentItem, { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 10 }]}>
-                        {typeof avatarFonteC === "object" && avatarFonteC?.uri ? (
-                          <Image source={{ uri: avatarFonteC.uri }} style={{ width: 32, height: 32, borderRadius: 16 }} resizeMode="cover" />
+                      <View
+                        key={c.id || index}
+                        style={[
+                          DetalhePostStyles.commentItem,
+                          {
+                            flexDirection: "row",
+                            alignItems: "center",
+                            gap: 10,
+                            marginBottom: 10,
+                          },
+                        ]}
+                      >
+                        {typeof avatarFonteC === "object" &&
+                        avatarFonteC?.uri ? (
+                          <Image
+                            source={{ uri: avatarFonteC.uri }}
+                            style={{
+                              width: 32,
+                              height: 32,
+                              borderRadius: 16,
+                            }}
+                            resizeMode="cover"
+                          />
                         ) : typeof avatarFonteC === "string" ? (
-                          <Image source={{ uri: avatarFonteC }} style={{ width: 32, height: 32, borderRadius: 16 }} resizeMode="cover" />
+                          <Image
+                            source={{ uri: avatarFonteC }}
+                            style={{
+                              width: 32,
+                              height: 32,
+                              borderRadius: 16,
+                            }}
+                            resizeMode="cover"
+                          />
                         ) : (
-                          <Image source={avatarFonteC} style={{ width: 32, height: 32, borderRadius: 16 }} resizeMode="cover" />
+                          <Image
+                            source={avatarFonteC}
+                            style={{
+                              width: 32,
+                              height: 32,
+                              borderRadius: 16,
+                            }}
+                            resizeMode="cover"
+                          />
                         )}
                         <View style={{ flex: 1 }}>
-                          <Text style={DetalhePostStyles.commentAuthor}>{c.autor || c.nome}</Text>
-                          <Text style={DetalhePostStyles.commentBody}>{c.texto}</Text>
+                          <Text style={DetalhePostStyles.commentAuthor}>
+                            {c.autor || c.nome}
+                          </Text>
+                          <Text style={DetalhePostStyles.commentBody}>
+                            {c.texto}
+                          </Text>
                         </View>
                       </View>
                     );
@@ -311,7 +453,9 @@ export const DetalhesPost = ({ onVoltar, onVerComentarios, post, aoCurtirPost, a
                       onPress={handleAdicionarComentario}
                       activeOpacity={0.8}
                     >
-                      <Text style={DetalhePostStyles.commentSendText}>Publicar</Text>
+                      <Text style={DetalhePostStyles.commentSendText}>
+                        Publicar
+                      </Text>
                     </TouchableOpacity>
                   </View>
                 </View>

@@ -94,15 +94,17 @@
       "accent": "#5ef9d6",
       "avatar": "WhatsApp Image 2026-08-25 at 11.25.57 2.png",
       "image": "12 Sem Título_20260828133808.jpg",
-      "curtidas": 124,
+      "curtidas": 125,
       "curtidores": [
-        "Arthurbr-YT"
+        "Arthurbr-YT",
+        "jao"
       ],
-      "curtido": false,
+      "curtido": true,
       "comentariosCount": 2,
-      "republicado": false,
+      "republicado": true,
       "republicadores": [
-        "Arthurbr-YT"
+        "Arthurbr-YT",
+        "jao"
       ],
       "tags": [
         "Canal",
@@ -125,7 +127,7 @@
           "curtido": false
         }
       ],
-      "repostsCount": 1
+      "repostsCount": 2
     },
     {
       "id": "2",
@@ -748,6 +750,24 @@
       "horario": "Agora",
       "createdAt": 1789734217905,
       "postId": "pRWXIolnJUU"
+    },
+    {
+      "id": "EbxAchw4fbE",
+      "tipo": "curtida",
+      "usuario": "jao",
+      "texto": "Curtiu a publicação de Arthurbr-YT",
+      "horario": "Agora",
+      "createdAt": 1789735706269,
+      "postId": "1"
+    },
+    {
+      "id": "f5W8WUvMB5M",
+      "tipo": "repost",
+      "usuario": "jao",
+      "texto": "Republicou a publicação de Arthurbr-YT",
+      "horario": "Agora",
+      "createdAt": 1789736718352,
+      "postId": "1"
     }
   ],
   "perfil": {

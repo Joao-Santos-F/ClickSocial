@@ -529,9 +529,26 @@ export const ApiProvider = ({ children }) => {
           }
         }
         
-        // Ordena os posts em ordem cronológica decrescente (mais novos no topo)
+        // Sincroniza os posts apenas quando houver alteração real para evitar remount indevido da interface
         const postsProcessados = postsData.map((p) => processarPostServidor(p, usuarioAtualizadoRef));
-        setPosts(ordenarPostsPorData(postsProcessados));
+        const postsDiferentes =
+          postsProcessados.length !== postsRef.current.length ||
+          postsProcessados.some((pServidor, index) => {
+            const pLocal = postsRef.current[index];
+            if (!pLocal) return true;
+            return (
+              String(pLocal.id) !== String(pServidor.id) ||
+              pLocal.curtidas !== pServidor.curtidas ||
+              pLocal.curtido !== pServidor.curtido ||
+              pLocal.repostsCount !== pServidor.repostsCount ||
+              pLocal.republicado !== pServidor.republicado ||
+              (pLocal.comentarios?.length || 0) !== (pServidor.comentarios?.length || 0)
+            );
+          });
+
+        if (postsDiferentes) {
+          setPosts(ordenarPostsPorData(postsProcessados));
+        }
 
         setNotificacoes(ordenarNotificacoesPorData(Array.isArray(notifData) ? notifData : []));
         if (perfilData && perfilData.usuario && !usuarioAtualizadoRef) {
@@ -763,8 +780,7 @@ export const ApiProvider = ({ children }) => {
     };
 
     setPosts((postsAnteriores) => {
-      const novosPosts = postsAnteriores.map((p) => (String(p.id) === String(postId) ? postAtualizado : p));
-      return ordenarPostsPorData(novosPosts);
+      return postsAnteriores.map((p) => (String(p.id) === String(postId) ? postAtualizado : p));
     });
 
     if (onPostUpdate) onPostUpdate(postAtualizado);
@@ -819,8 +835,7 @@ export const ApiProvider = ({ children }) => {
     };
 
     setPosts((postsAnteriores) => {
-      const novosPosts = postsAnteriores.map((p) => (String(p.id) === String(postId) ? postAtualizado : p));
-      return ordenarPostsPorData(novosPosts);
+      return postsAnteriores.map((p) => (String(p.id) === String(postId) ? postAtualizado : p));
     });
 
     if (onPostUpdate) onPostUpdate(postAtualizado);
@@ -848,6 +863,19 @@ export const ApiProvider = ({ children }) => {
     }
 
     return postAtualizado;
+  };
+
+  // Excluir post com remoção local imediata e sincronização silenciosa
+  const excluirPost = async (postId) => {
+    setPosts((postsAnteriores) => postsAnteriores.filter((p) => String(p.id) !== String(postId)));
+
+    try {
+      await fetch(`${API_BASE_URL}/posts/${postId}`, {
+        method: "DELETE",
+      });
+    } catch (e) {
+      console.log("[ApiContext] Servidor json-server offline ao excluir post (usando modo local).");
+    }
   };
 
   // Adicionar novo post com createdAt e ordenação cronológica garantida
@@ -1015,8 +1043,7 @@ export const ApiProvider = ({ children }) => {
     const postAtualizado = { ...postAlvo, comentarios: comentariosNovos };
 
     setPosts((prevPosts) => {
-      const atualizados = prevPosts.map((p) => (String(p.id) === String(postId) ? postAtualizado : p));
-      return ordenarPostsPorData(atualizados);
+      return prevPosts.map((p) => (String(p.id) === String(postId) ? postAtualizado : p));
     });
 
     try {

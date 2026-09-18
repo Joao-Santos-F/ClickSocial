@@ -63,7 +63,7 @@ export default function ProfileScreen({
         {/* Abas de navegação de conteúdo */}
         <ProfileTabs abaAtiva={abaAtiva} aoMudarAba={setAbaAtiva} />
 
-        {/* Conteúdo dinâmico das Abas */}
+        {/* Aba 0 — Publicações */}
         {abaAtiva === 0 && (
           <GradePublicacoes
             apenasPostados={true}
@@ -71,14 +71,21 @@ export default function ProfileScreen({
             postsCompartilhados={postsCompartilhados}
             setPostsCompartilhados={setPostsCompartilhados}
             aoAbrirPost={(post) => aoMudarTela && aoMudarTela("detalhes", post, "perfil")}
+            aoCurtirPost={() => {}}
           />
         )}
+        {/* Aba 1 — Republicados */}
         {abaAtiva === 1 && (
-          <SecaoComentarios
+          <GradePublicacoes
+            apenasRepublicados={true}
             dadosPerfil={dadosPerfil}
             postsCompartilhados={postsCompartilhados}
+            setPostsCompartilhados={setPostsCompartilhados}
+            aoAbrirPost={(post) => aoMudarTela && aoMudarTela("detalhes", post, "perfil")}
+            aoCurtirPost={() => {}}
           />
         )}
+        {/* Aba 2 — Curtidas */}
         {abaAtiva === 2 && (
           <GradePublicacoes
             apenasCurtidas={true}
@@ -86,15 +93,14 @@ export default function ProfileScreen({
             postsCompartilhados={postsCompartilhados}
             setPostsCompartilhados={setPostsCompartilhados}
             aoAbrirPost={(post) => aoMudarTela && aoMudarTela("detalhes", post, "perfil")}
+            aoCurtirPost={() => {}}
           />
         )}
+        {/* Aba 3 — Comentários */}
         {abaAtiva === 3 && (
-          <GradePublicacoes
-            apenasRepublicados={true}
+          <SecaoComentarios
             dadosPerfil={dadosPerfil}
             postsCompartilhados={postsCompartilhados}
-            setPostsCompartilhados={setPostsCompartilhados}
-            aoAbrirPost={(post) => aoMudarTela && aoMudarTela("detalhes", post, "perfil")}
           />
         )}
       </ScrollView>

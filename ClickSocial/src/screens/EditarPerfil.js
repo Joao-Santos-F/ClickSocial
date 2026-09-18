@@ -201,7 +201,15 @@ export default function EditarPerfil({ perfil, onVoltar, onSalvar }) {
             </View>
 
             <View style={styles.formGroup}>
-              <Text style={styles.label}>Bio (máx. 80 caracteres)</Text>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                <Text style={styles.label}>Bio (máx. 80 caracteres)</Text>
+                <Text style={[
+                  styles.label,
+                  { fontSize: 12, fontWeight: '400', color: bio.length >= 75 ? '#E0245E' : '#999999' }
+                ]}>
+                  {bio.length}/80
+                </Text>
+              </View>
               <TextInput
                 style={[styles.input, styles.textArea]}
                 placeholder="Digite algo para sua Bio"

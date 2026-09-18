@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef } from "react";
 import {
   View,
   TouchableOpacity,
@@ -9,51 +9,96 @@ import {
 import { theme } from "../styles/theme";
 
 const ESPACAMENTO = 8;
+const DEBOUNCE_MS = 280;
 
 export function GradePublicacoes({
   apenasPostados = false,
   apenasCurtidas = false,
   apenasRepublicados = false,
   aoAbrirPost,
+  aoCurtirPost,
   postsCompartilhados = [],
   setPostsCompartilhados,
   dadosPerfil,
 }) {
+  // Refs para debounce de toque duplo por post
+  const timersRef = useRef({});
+  const tapCountRef = useRef({});
+
   const lidarComToque = (post) => {
-    if (aoAbrirPost) {
-      aoAbrirPost(post);
+    const id = post.id;
+    tapCountRef.current[id] = (tapCountRef.current[id] || 0) + 1;
+
+    if (tapCountRef.current[id] === 1) {
+      // Primeiro toque — aguarda para ver se vem segundo
+      timersRef.current[id] = setTimeout(() => {
+        tapCountRef.current[id] = 0;
+        // Clique simples: abre o post
+        if (aoAbrirPost) aoAbrirPost(post);
+      }, DEBOUNCE_MS);
+    } else {
+      // Segundo toque — cancela o timer e curte
+      clearTimeout(timersRef.current[id]);
+      tapCountRef.current[id] = 0;
+      if (aoCurtirPost) aoCurtirPost(post.id);
     }
   };
 
-  const userTarget = (dadosPerfil?.usuario || dadosPerfil?.nome || "").trim().toLowerCase();
+  const userTarget = (dadosPerfil?.usuario || dadosPerfil?.nome || "")
+    .trim()
+    .toLowerCase();
   let postsFiltrados = postsCompartilhados || [];
 
   if (apenasPostados) {
     postsFiltrados = postsFiltrados.filter((p) => {
       const postUser = (p.user || p.usuario || "").trim().toLowerCase();
       if (!userTarget) return true;
-      return postUser === userTarget || (userTarget === "você" && postUser === "você");
+      return (
+        postUser === userTarget ||
+        (userTarget === "você" && postUser === "você")
+      );
     });
   }
 
   if (apenasCurtidas) {
     postsFiltrados = postsFiltrados.filter((p) => {
+      // Aceita tanto a flag booleana quanto a lista de curtidores
+      if (Boolean(p.curtido)) return true;
       const curtidores = Array.isArray(p.curtidores) ? p.curtidores : [];
-      return curtidores.some((u) => u.trim().toLowerCase() === userTarget);
+      return curtidores.some(
+        (u) => u.trim().toLowerCase() === userTarget
+      );
     });
   }
 
   if (apenasRepublicados) {
     postsFiltrados = postsFiltrados.filter((p) => {
-      const republicadores = Array.isArray(p.republicadores) ? p.republicadores : [];
-      return republicadores.some((u) => u.trim().toLowerCase() === userTarget);
+      // Aceita tanto a flag booleana quanto a lista de republicadores
+      if (Boolean(p.republicado)) return true;
+      const republicadores = Array.isArray(p.republicadores)
+        ? p.republicadores
+        : [];
+      return republicadores.some(
+        (u) => u.trim().toLowerCase() === userTarget
+      );
     });
   }
 
   if (postsFiltrados.length === 0) {
     return (
-      <View style={[styles.container, { justifyContent: "center", paddingVertical: 40 }]}>
-        <Text style={{ color: theme.colors.textSecondary, textAlign: "center", width: "100%" }}>
+      <View
+        style={[
+          styles.container,
+          { justifyContent: "center", paddingVertical: 40 },
+        ]}
+      >
+        <Text
+          style={{
+            color: theme.colors.textSecondary,
+            textAlign: "center",
+            width: "100%",
+          }}
+        >
           {apenasCurtidas
             ? "Nenhuma foto curtida ainda."
             : apenasRepublicados
@@ -76,9 +121,17 @@ export function GradePublicacoes({
           <View style={styles.conteudoPost}>
             {post.image ? (
               typeof post.image === "string" ? (
-                <Image source={{ uri: post.image }} style={styles.imagemPost} resizeMode="cover" />
+                <Image
+                  source={{ uri: post.image }}
+                  style={styles.imagemPost}
+                  resizeMode="cover"
+                />
               ) : (
-                <Image source={post.image} style={styles.imagemPost} resizeMode="cover" />
+                <Image
+                  source={post.image}
+                  style={styles.imagemPost}
+                  resizeMode="cover"
+                />
               )
             ) : (
               <View style={styles.cardTextoPreview}>
