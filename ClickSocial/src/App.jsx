@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { View } from "react-native";
+import React, { useState, useEffect, useCallback } from "react";
+import { View, BackHandler, Platform } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { ApiProvider, useApi } from "./context/ApiContext";
 import BoasVindasScreen from "./screens/BoasVindasScreen";
@@ -13,6 +13,9 @@ import ProfileScreen from "./screens/ProfileScreen";
 import EditarPerfil from "./screens/EditarPerfil";
 import Comentario from "./screens/Comentario";
 import NotificacoesScreen from "./screens/NotificacoesScreen";
+
+const ehAbaPrincipalNome = (nome) =>
+  ["feed", "pesquisa", "criarpost", "notificacao", "perfil"].includes((nome || "").toLowerCase());
 
 function AppContent() {
   const {
@@ -39,66 +42,119 @@ function AppContent() {
     return "boasVindas";
   });
 
-  const [telaAnterior, setTelaAnterior] = useState("feed");
+  // Pilha de navegação (Navigation Stack) para garantir histórico confiável em qualquer nível
+  const [historicoTelas, setHistoricoTelas] = useState(["feed"]);
   const [postSelecionado, setPostSelecionado] = useState(null);
 
-  // Navegador central com memória de origem
+  // Função centralizada para voltar para a tela anterior correta
+  const lidarVoltarTela = useCallback(() => {
+    setHistoricoTelas((prev) => {
+      const novaPilha = [...prev];
+      let destino = novaPilha.pop();
+
+      // Evita retornar para a própria tela atual
+      while (destino && destino.toLowerCase() === telaAtual.toLowerCase() && novaPilha.length > 0) {
+        destino = novaPilha.pop();
+      }
+
+      if (!destino || destino.toLowerCase() === telaAtual.toLowerCase()) {
+        destino = "feed";
+      }
+
+      setTelaAtual(destino);
+      return novaPilha.length > 0 ? novaPilha : ["feed"];
+    });
+  }, [telaAtual]);
+
+  // Suporte a botão de voltar físico do Android
+  useEffect(() => {
+    const onBackPress = () => {
+      const telasRaiz = ["feed", "login", "boasvindas"];
+      if (!telasRaiz.includes(telaAtual.toLowerCase())) {
+        lidarVoltarTela();
+        return true;
+      }
+      return false;
+    };
+
+    const subscription = BackHandler.addEventListener("hardwareBackPress", onBackPress);
+    return () => subscription.remove();
+  }, [telaAtual, lidarVoltarTela]);
+
+  // Suporte ao evento popstate (botão voltar do navegador) no ambiente Web
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.addEventListener) {
+      const handlePopState = () => {
+        const telasRaiz = ["feed", "login", "boasvindas"];
+        if (!telasRaiz.includes(telaAtual.toLowerCase())) {
+          lidarVoltarTela();
+        }
+      };
+      window.addEventListener("popstate", handlePopState);
+      return () => window.removeEventListener("popstate", handlePopState);
+    }
+  }, [telaAtual, lidarVoltarTela]);
+
+  // Navegador central com empilhamento de histórico
   const lidarNavegacaoApp = (destinoId, post, origem) => {
     const destino = (destinoId || "").toLowerCase();
 
     if (destino === "sair") {
       fazerLogout();
+      setHistoricoTelas(["login"]);
       setTelaAtual("login");
       return;
     }
 
+    const telaOrigem = origem || telaAtual;
+
     if (destino === "detalhes" || destino === "detalhepost") {
-      setTelaAnterior(origem || telaAtual);
-      setPostSelecionado(post || posts[0]);
+      setHistoricoTelas((prev) => [...prev.filter((t) => t.toLowerCase() !== "detalhes"), telaOrigem]);
+      const postAlvo = post || posts.find((p) => p.id === postSelecionado?.id) || posts[0];
+      setPostSelecionado(postAlvo);
       setTelaAtual("detalhes");
       return;
     }
+
     if (destino === "comentarios" || destino === "comentario") {
-      setTelaAnterior(origem || telaAtual);
+      setHistoricoTelas((prev) => [...prev.filter((t) => t.toLowerCase() !== "comentarios"), telaOrigem]);
       if (post) setPostSelecionado(post);
       setTelaAtual("comentarios");
       return;
     }
 
-    switch (destino) {
-      case "feed":
-      case "inicio":
-        setTelaAtual("feed");
-        break;
-      case "pesquisa":
-        setTelaAtual("pesquisa");
-        break;
-      case "criar":
-      case "criarpost":
-        setTelaAtual("criarPost");
-        break;
-      case "notificacao":
-      case "notificacoes":
-        setTelaAtual("notificacao");
-        break;
-      case "perfil":
-        setTelaAtual("perfil");
-        break;
-      case "editarperfil":
-      case "editar":
-        setTelaAtual("editarPerfil");
-        break;
-      case "login":
-        setTelaAtual("login");
-        break;
-      case "cadastro":
-        setTelaAtual("cadastro");
-        break;
-      case "boasvindas":
-        setTelaAtual("boasVindas");
-        break;
-      default:
-        break;
+    if (destino === "editarperfil" || destino === "editar") {
+      setHistoricoTelas((prev) => [...prev.filter((t) => t.toLowerCase() !== "editarperfil"), telaOrigem]);
+      setTelaAtual("editarPerfil");
+      return;
+    }
+
+    if (destino === "criar" || destino === "criarpost") {
+      setHistoricoTelas((prev) => [...prev.filter((t) => t.toLowerCase() !== "criarpost"), telaOrigem]);
+      setTelaAtual("criarPost");
+      return;
+    }
+
+    const mapaDestinos = {
+      feed: "feed",
+      inicio: "feed",
+      pesquisa: "pesquisa",
+      notificacao: "notificacao",
+      notificacoes: "notificacao",
+      perfil: "perfil",
+      login: "login",
+      cadastro: "cadastro",
+      boasvindas: "boasVindas",
+    };
+
+    const telaDestino = mapaDestinos[destino];
+    if (telaDestino) {
+      if (ehAbaPrincipalNome(telaDestino)) {
+        setHistoricoTelas(["feed"]);
+      } else {
+        setHistoricoTelas((prev) => [...prev, telaAtual]);
+      }
+      setTelaAtual(telaDestino);
     }
   };
 
@@ -118,7 +174,7 @@ function AppContent() {
     });
   };
 
-  const ehAbaPrincipal = ["feed", "pesquisa", "criarpost", "notificacao", "perfil"].includes(telaAtual.toLowerCase());
+  const ehAbaPrincipal = ehAbaPrincipalNome(telaAtual);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#181122" }}>
@@ -146,7 +202,7 @@ function AppContent() {
         <View style={{ flex: 1, display: telaAtual.toLowerCase() === "criarpost" ? "flex" : "none" }}>
           <CriarPost
             dadosPerfil={dadosPerfil}
-            onVoltar={() => setTelaAtual("feed")}
+            onVoltar={lidarVoltarTela}
             onPublicarSucesso={(novoPost) => {
               if (novoPost) {
                 adicionarNovoPost(novoPost);
@@ -171,7 +227,7 @@ function AppContent() {
             telaAtiva="perfil"
             dadosPerfil={dadosPerfil}
             aoMudarTela={lidarNavegacaoApp}
-            onEditar={() => setTelaAtual("editarPerfil")}
+            onEditar={() => lidarNavegacaoApp("editarPerfil", null, "perfil")}
             onVoltar={() => setTelaAtual("feed")}
             postsCompartilhados={posts}
           />
@@ -182,32 +238,42 @@ function AppContent() {
       {telaAtual === "detalhes" && (
         <DetalhesPost
           post={postSelecionado}
-          onVoltar={() => setTelaAtual(telaAnterior || "feed")}
-          onVerComentarios={() => setTelaAtual("comentarios")}
+          onVoltar={lidarVoltarTela}
+          onVerComentarios={() => lidarNavegacaoApp("comentarios", postSelecionado, "detalhes")}
           aoCurtirPost={() => handleCurtir(postSelecionado?.id)}
-        />
-      )}
-
-      {telaAtual === "comentarios" && (
-        <Comentario
-          post={postSelecionado}
-          onVoltar={() => setTelaAtual(telaAnterior || "detalhes")}
-          onBack={() => setTelaAtual(telaAnterior || "detalhes")}
           aoAdicionarComentario={async (texto, parentCommentId) => {
             if (postSelecionado?.id) {
               const atualizado = await adicionarComentario(postSelecionado.id, texto, parentCommentId);
               if (atualizado) {
                 setPostSelecionado(atualizado);
               }
+              return atualizado;
             }
           }}
-          aoCurtirComentario={(commentId) => {
+        />
+      )}
+
+      {telaAtual === "comentarios" && (
+        <Comentario
+          post={postSelecionado}
+          onVoltar={lidarVoltarTela}
+          onBack={lidarVoltarTela}
+          aoAdicionarComentario={async (texto, parentCommentId) => {
             if (postSelecionado?.id) {
-              alternarCurtidaComentarioGlobal(postSelecionado.id, commentId).then((atualizado) => {
-                if (atualizado) {
-                  setPostSelecionado(atualizado);
-                }
-              });
+              const atualizado = await adicionarComentario(postSelecionado.id, texto, parentCommentId);
+              if (atualizado) {
+                setPostSelecionado(atualizado);
+              }
+              return atualizado;
+            }
+          }}
+          aoCurtirComentario={async (commentId) => {
+            if (postSelecionado?.id) {
+              const atualizado = await alternarCurtidaComentarioGlobal(postSelecionado.id, commentId);
+              if (atualizado) {
+                setPostSelecionado(atualizado);
+              }
+              return atualizado;
             }
           }}
         />
@@ -216,10 +282,10 @@ function AppContent() {
       {telaAtual === "editarPerfil" && (
         <EditarPerfil
           perfil={dadosPerfil}
-          onVoltar={() => setTelaAtual("perfil")}
+          onVoltar={lidarVoltarTela}
           onSalvar={(novosDados) => {
             if (novosDados) atualizarPerfil(novosDados);
-            setTelaAtual("perfil");
+            lidarVoltarTela();
           }}
         />
       )}

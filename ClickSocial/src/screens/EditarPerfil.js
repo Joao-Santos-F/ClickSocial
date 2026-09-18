@@ -142,6 +142,9 @@ export default function EditarPerfil({ perfil, onVoltar, onSalvar }) {
                 style={styles.backButton}
                 onPress={onVoltar}
                 activeOpacity={0.7}
+                hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+                accessibilityRole="button"
+                accessibilityLabel="Voltar"
               >
                 <Image
                   source={require('../../assets/incon_seta-esquerda.png')}

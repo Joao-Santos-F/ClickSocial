@@ -18,8 +18,8 @@ import iconCoracao from "../../../assets/incon_coracao.png";
 import avatarDefault from "../../../assets/WhatsApp Image 2026-08-25 at 11.25.57 2.png";
 import { useApi } from "../../context/ApiContext";
 
-export const DetalhesPost = ({ onVoltar, onVerComentarios, post, aoCurtirPost }) => {
-  const { usuarios = [], dadosPerfil = {} } = useApi();
+export const DetalhesPost = ({ onVoltar, onVerComentarios, post, aoCurtirPost, aoAdicionarComentario }) => {
+  const { usuarios = [], dadosPerfil = {}, adicionarComentario: adicionarComentarioApi } = useApi();
 
   const [curtido, setCurtido] = useState(Boolean(post?.curtido));
   const [likes, setLikes] = useState(
@@ -81,23 +81,38 @@ export const DetalhesPost = ({ onVoltar, onVerComentarios, post, aoCurtirPost })
     }
   };
 
-  const handleAdicionarComentario = () => {
+  const handleAdicionarComentario = async () => {
     if (!novoComentario.trim()) return;
+    const textoComent = novoComentario.trim();
+    setNovoComentario("");
+
     const avatarComentario =
       (dadosPerfil?.fotoUri ? { uri: dadosPerfil.fotoUri } : null) ||
       dadosPerfil?.imagemPerfil ||
       avatarDefault;
 
-    setComentarios([
-      ...comentarios,
-      {
-        id: String(Date.now()),
-        autor: dadosPerfil?.usuario || "Você",
-        texto: novoComentario.trim(),
-        avatar: avatarComentario,
-      },
-    ]);
-    setNovoComentario("");
+    const novoObj = {
+      id: String(Date.now()),
+      autor: dadosPerfil?.usuario || "Você",
+      texto: textoComent,
+      avatar: avatarComentario,
+      curtidas: 0,
+      curtido: false,
+    };
+
+    setComentarios((prev) => [...prev, novoObj]);
+
+    if (aoAdicionarComentario) {
+      const atualizado = await aoAdicionarComentario(textoComent);
+      if (atualizado && Array.isArray(atualizado.comentarios)) {
+        setComentarios(atualizado.comentarios);
+      }
+    } else if (post?.id && adicionarComentarioApi) {
+      const atualizado = await adicionarComentarioApi(post.id, textoComent);
+      if (atualizado && Array.isArray(atualizado.comentarios)) {
+        setComentarios(atualizado.comentarios);
+      }
+    }
   };
 
   const resolverAvatarComentario = (c) => {
@@ -157,6 +172,9 @@ export const DetalhesPost = ({ onVoltar, onVerComentarios, post, aoCurtirPost })
                   onPress={onVoltar}
                   style={DetalhePostStyles.headerIconBtn}
                   activeOpacity={0.7}
+                  hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+                  accessibilityRole="button"
+                  accessibilityLabel="Voltar"
                 >
                   <Image source={setaE} style={DetalhePostStyles.headerIcon} />
                 </TouchableOpacity>

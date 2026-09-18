@@ -70,7 +70,7 @@ export default function ProfileScreen({
             dadosPerfil={dadosPerfil}
             postsCompartilhados={postsCompartilhados}
             setPostsCompartilhados={setPostsCompartilhados}
-            aoAbrirPost={(post) => aoMudarTela && aoMudarTela("detalhes", post)}
+            aoAbrirPost={(post) => aoMudarTela && aoMudarTela("detalhes", post, "perfil")}
           />
         )}
         {abaAtiva === 1 && (
@@ -85,7 +85,7 @@ export default function ProfileScreen({
             dadosPerfil={dadosPerfil}
             postsCompartilhados={postsCompartilhados}
             setPostsCompartilhados={setPostsCompartilhados}
-            aoAbrirPost={(post) => aoMudarTela && aoMudarTela("detalhes", post)}
+            aoAbrirPost={(post) => aoMudarTela && aoMudarTela("detalhes", post, "perfil")}
           />
         )}
         {abaAtiva === 3 && (
@@ -94,7 +94,7 @@ export default function ProfileScreen({
             dadosPerfil={dadosPerfil}
             postsCompartilhados={postsCompartilhados}
             setPostsCompartilhados={setPostsCompartilhados}
-            aoAbrirPost={(post) => aoMudarTela && aoMudarTela("detalhes", post)}
+            aoAbrirPost={(post) => aoMudarTela && aoMudarTela("detalhes", post, "perfil")}
           />
         )}
       </ScrollView>

@@ -35,14 +35,16 @@ export const DetalhePostStyles = StyleSheet.create({
     marginBottom: 20,
   },
   headerIconBtn: {
-    width: 32,
-    height: 32,
+    minWidth: 36,
+    minHeight: 36,
     justifyContent: "center",
-    alignItems: "flex-start",
+    alignItems: "center",
+    zIndex: 10,
+    cursor: "pointer",
   },
   headerIcon: {
-    width: 20,
-    height: 20,
+    width: 22,
+    height: 22,
     resizeMode: "contain",
   },
   headerTitle: {
@@ -53,7 +55,7 @@ export const DetalhePostStyles = StyleSheet.create({
     flex: 1,
   },
   headerPlaceholder: {
-    width: 32,
+    minWidth: 36,
   },
 
   authorRow: {

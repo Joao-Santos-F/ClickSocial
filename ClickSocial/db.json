@@ -94,15 +94,17 @@
       "accent": "#5ef9d6",
       "avatar": "WhatsApp Image 2026-08-25 at 11.25.57 2.png",
       "image": "12 Sem Título_20260828133808.jpg",
-      "curtidas": 124,
+      "curtidas": 125,
       "curtidores": [
-        "Arthurbr-YT"
+        "Arthurbr-YT",
+        "jao"
       ],
-      "curtido": false,
+      "curtido": true,
       "comentariosCount": 2,
-      "republicado": false,
+      "republicado": true,
       "republicadores": [
-        "Arthurbr-YT"
+        "Arthurbr-YT",
+        "jao"
       ],
       "tags": [
         "Canal",
@@ -125,7 +127,7 @@
           "curtido": false
         }
       ],
-      "repostsCount": 1
+      "repostsCount": 2
     },
     {
       "id": "2",
@@ -135,11 +137,12 @@
       "accent": "#74f7c7",
       "avatar": "WhatsApp Image 2026-08-25 at 11.25.57 2.png",
       "image": "1212.jpg",
-      "curtidas": 89,
+      "curtidas": 90,
       "curtidores": [
-        "Outro Cara"
+        "Outro Cara",
+        "jao"
       ],
-      "curtido": false,
+      "curtido": true,
       "comentariosCount": 1,
       "republicado": false,
       "republicadores": [],
@@ -155,7 +158,8 @@
           "curtidas": 2,
           "curtido": false
         }
-      ]
+      ],
+      "repostsCount": 0
     },
     {
       "id": "3",
@@ -246,7 +250,9 @@
       "id": "TvNOA55Oza4",
       "user": "TesteCrossPlatform",
       "text": "Testando sincronismo iOS e Android",
-      "createdAt": 1789586786165
+      "createdAt": 1789586786165,
+      "comentarios": [],
+      "comentariosCount": 0
     },
     {
       "id": "pRWXIolnJUU",
@@ -681,6 +687,60 @@
       "horario": "Agora",
       "createdAt": 1789586929698,
       "postId": "1789586928835"
+    },
+    {
+      "id": "g2GvhSZXqSI",
+      "tipo": "curtida",
+      "usuario": "jao",
+      "texto": "Curtiu a publicação de Arthurbr-YT",
+      "horario": "Agora",
+      "createdAt": 1789733718370,
+      "postId": "1"
+    },
+    {
+      "id": "v12Ahicgf2k",
+      "tipo": "repost",
+      "usuario": "jao",
+      "texto": "Republicou a publicação de Outro Cara",
+      "horario": "Agora",
+      "createdAt": 1789733722562,
+      "postId": "2"
+    },
+    {
+      "id": "5pHxXKvaU7g",
+      "tipo": "repost",
+      "usuario": "jao",
+      "texto": "Republicou a publicação de Arthurbr-YT",
+      "horario": "Agora",
+      "createdAt": 1789733725882,
+      "postId": "1"
+    },
+    {
+      "id": "40hDvlk007w",
+      "tipo": "curtida",
+      "usuario": "jao",
+      "texto": "Curtiu a publicação de Outro Cara",
+      "horario": "Agora",
+      "createdAt": 1789733734335,
+      "postId": "2"
+    },
+    {
+      "id": "Gg3bH79niP8",
+      "tipo": "curtida",
+      "usuario": "jao",
+      "texto": "Curtiu a publicação de Arthurbr-YT",
+      "horario": "Agora",
+      "createdAt": 1789733792666,
+      "postId": "1"
+    },
+    {
+      "id": "-EWIHKx4vv0",
+      "tipo": "repost",
+      "usuario": "jao",
+      "texto": "Republicou a publicação de Arthurbr-YT",
+      "horario": "Agora",
+      "createdAt": 1789733793619,
+      "postId": "1"
     }
   ],
   "perfil": {

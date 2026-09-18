@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   Text,
@@ -21,56 +21,42 @@ export default function Comentario({ onBack, onVoltar, post, aoCurtirComentario,
   const [novoTexto, setNovoTexto] = useState('');
   const [replyToComment, setReplyToComment] = useState(null);
 
-  const comentariosPadrao = [
-    {
-      id: '1',
-      nome: 'Eduardo Torolho',
-      autor: 'Eduardo Torolho',
-      handle: 'happy_1243',
-      tempo: 'Há 2 minutos',
-      texto: 'É o goat não tem jeito 🔥🔥',
-      curtidas: 12,
-      curtido: false,
-      respostas: 6,
-      avatar: avatarEduardo,
-    },
-    {
-      id: '2',
-      nome: 'Lucas M.',
-      autor: 'Lucas M.',
-      handle: 'lucas_m',
-      tempo: 'Há 10 minutos',
-      texto: 'Sensacional demais!',
-      curtidas: 5,
-      curtido: false,
-      respostas: 1,
-      avatar: avatarDefault,
-    },
-  ];
+  const obterComentariosIniciais = () => {
+    if (post && Array.isArray(post.comentarios)) {
+      return post.comentarios;
+    }
+    return [];
+  };
 
-  const [localComentarios, setLocalComentarios] = useState(post?.comentarios || comentariosPadrao);
+  const [localComentarios, setLocalComentarios] = useState(obterComentariosIniciais);
 
-  const listaComentarios = post?.comentarios || localComentarios;
+  useEffect(() => {
+    if (post && Array.isArray(post.comentarios)) {
+      setLocalComentarios(post.comentarios);
+    }
+  }, [post]);
+
+  const listaComentarios = localComentarios;
 
   const lidarVoltar = onBack || onVoltar;
 
-  const alternarCurtidaComentario = (id) => {
+  const alternarCurtidaComentario = async (id) => {
+    setLocalComentarios((anteriores) =>
+      anteriores.map((item) => {
+        if (String(item.id) === String(id)) {
+          const novoCurtido = !item.curtido;
+          return {
+            ...item,
+            curtido: novoCurtido,
+            curtidas: novoCurtido ? (item.curtidas || 0) + 1 : Math.max(0, (item.curtidas || 0) - 1),
+          };
+        }
+        return item;
+      })
+    );
+
     if (aoCurtirComentario) {
-      aoCurtirComentario(id);
-    } else {
-      setLocalComentarios((anteriores) =>
-        anteriores.map((item) => {
-          if (item.id === id) {
-            const novoCurtido = !item.curtido;
-            return {
-              ...item,
-              curtido: novoCurtido,
-              curtidas: novoCurtido ? item.curtidas + 1 : Math.max(0, item.curtidas - 1),
-            };
-          }
-          return item;
-        })
-      );
+      await aoCurtirComentario(id);
     }
   };
 
@@ -82,23 +68,44 @@ export default function Comentario({ onBack, onVoltar, post, aoCurtirComentario,
     setNovoTexto('');
     setReplyToComment(null);
 
+    const novoObj = {
+      id: String(Date.now()),
+      parentCommentId: parentId,
+      nome: dadosPerfil?.nome || 'Você',
+      autor: dadosPerfil?.usuario || 'Você',
+      handle: dadosPerfil?.usuario || 'meu_usuario',
+      tempo: 'Agora',
+      texto: textoParaEnviar,
+      curtidas: 0,
+      curtido: false,
+      respostas: 0,
+      avatar: dadosPerfil?.fotoUri
+        ? { uri: dadosPerfil.fotoUri }
+        : (dadosPerfil?.imagemPerfil || avatarDefault),
+    };
+
+    setLocalComentarios((prev) => {
+      if (parentId) {
+        return prev.map((c) => {
+          if (String(c.id) === String(parentId)) {
+            const listaRespostas = Array.isArray(c.respostasLista) ? c.respostasLista : [];
+            return {
+              ...c,
+              respostas: (c.respostas || 0) + 1,
+              respostasLista: [...listaRespostas, novoObj],
+            };
+          }
+          return c;
+        });
+      }
+      return [...prev, novoObj];
+    });
+
     if (aoAdicionarComentario) {
-      await aoAdicionarComentario(textoParaEnviar, parentId);
-    } else {
-      const novoObj = {
-        id: String(Date.now()),
-        parentCommentId: parentId,
-        nome: dadosPerfil?.nome || 'Você',
-        autor: dadosPerfil?.usuario || 'Você',
-        handle: dadosPerfil?.usuario || 'meu_usuario',
-        tempo: 'Agora',
-        texto: textoParaEnviar,
-        curtidas: 0,
-        curtido: false,
-        respostas: 0,
-        avatar: dadosPerfil?.imagemPerfil || avatarDefault,
-      };
-      setLocalComentarios((prev) => [...prev, novoObj]);
+      const atualizado = await aoAdicionarComentario(textoParaEnviar, parentId);
+      if (atualizado && Array.isArray(atualizado.comentarios)) {
+        setLocalComentarios(atualizado.comentarios);
+      }
     }
   };
 
@@ -175,6 +182,9 @@ export default function Comentario({ onBack, onVoltar, post, aoCurtirComentario,
                 style={styles.backButton}
                 onPress={lidarVoltar}
                 activeOpacity={0.7}
+                hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+                accessibilityRole="button"
+                accessibilityLabel="Voltar"
               >
                 <Image
                   source={require('../../assets/incon_seta-esquerda.png')}
@@ -365,8 +375,13 @@ const styles = StyleSheet.create({
   backButton: {
     position: 'absolute',
     left: 0,
-    zIndex: 1,
-    padding: 4,
+    zIndex: 10,
+    padding: 6,
+    minWidth: 36,
+    minHeight: 36,
+    justifyContent: 'center',
+    alignItems: 'center',
+    cursor: 'pointer',
   },
   backIcon: {
     width: 24,

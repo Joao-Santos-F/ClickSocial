@@ -1,7 +1,6 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import { Platform } from "react-native";
 import Constants from "expo-constants";
-import * as FileSystem from "expo-file-system";
 
 // URL Base flexível conforme o ambiente (Web, Android, iOS ou Dispositivo Físico)
 const getApiBaseUrl = () => {
@@ -298,31 +297,21 @@ export const resolverUriPermanente = async (input) => {
     }
   }
 
-  // Tratamento universal para URIs de arquivos de celular (Android / iOS)
+  // Tratamento universal para URIs de arquivos (Web / Android / iOS)
   if (uri.startsWith("file://") || uri.startsWith("content://") || uri.startsWith("ph://")) {
     try {
-      const base64Data = await FileSystem.readAsStringAsync(uri, {
-        encoding: FileSystem.EncodingType.Base64,
+      const response = await fetch(uri);
+      const blob = await response.blob();
+      const rawResult = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = () => resolve(uri);
+        reader.readAsDataURL(blob);
       });
-      if (base64Data) {
-        const rawData = `data:image/jpeg;base64,${base64Data}`;
-        return await otimizarBase64Image(rawData);
+      if (typeof rawResult === "string" && rawResult.startsWith("data:image")) {
+        return await otimizarBase64Image(rawResult);
       }
-    } catch (e) {
-      try {
-        const response = await fetch(uri);
-        const blob = await response.blob();
-        const rawResult = await new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result);
-          reader.onerror = () => resolve(uri);
-          reader.readAsDataURL(blob);
-        });
-        if (typeof rawResult === "string" && rawResult.startsWith("data:image")) {
-          return await otimizarBase64Image(rawResult);
-        }
-      } catch (err) {}
-    }
+    } catch (err) {}
   }
 
   return uri;
@@ -396,8 +385,24 @@ export const ApiProvider = ({ children }) => {
 
   const [posts, setPosts] = useState(ordenarPostsPorData(DADOS_INICIAIS.posts));
   const [notificacoes, setNotificacoes] = useState(DADOS_INICIAIS.notificacoes);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [isOnline, setIsOnline] = useState(false);
+
+  // Refs estáveis para evitar recriação de callbacks e loops no useEffect
+  const usuarioLogadoRef = useRef(usuarioLogado);
+  useEffect(() => {
+    usuarioLogadoRef.current = usuarioLogado;
+  }, [usuarioLogado]);
+
+  const dadosPerfilRef = useRef(dadosPerfil);
+  useEffect(() => {
+    dadosPerfilRef.current = dadosPerfil;
+  }, [dadosPerfil]);
+
+  const postsRef = useRef(posts);
+  useEffect(() => {
+    postsRef.current = posts;
+  }, [posts]);
 
   // Mapeador auxiliar para tratar imagens e estados dinâmicos por usuário do json-server
   const processarPostServidor = useCallback((p, usuarioAtual = usuarioLogado) => {
@@ -462,8 +467,10 @@ export const ApiProvider = ({ children }) => {
     };
   }, [usuarios, dadosPerfil, usuarioLogado]);
 
-  const recarregarDados = useCallback(async () => {
-    setLoading(true);
+  const recarregarDados = useCallback(async (isInitial = false) => {
+    if (isInitial) {
+      setLoading(true);
+    }
     try {
       const [resUsuarios, resPosts, resNotif, resPerfil] = await Promise.all([
         fetch(`${API_BASE_URL}/usuarios`),
@@ -478,36 +485,47 @@ export const ApiProvider = ({ children }) => {
         const notifData = await resNotif.json();
         const perfilData = await resPerfil.json();
 
-        let usuarioAtualizadoRef = usuarioLogado;
+        let usuarioAtualizadoRef = usuarioLogadoRef.current;
 
         if (Array.isArray(usersData) && usersData.length > 0) {
           setUsuarios(usersData);
 
-          // Sincroniza usuário autenticado com dados atualizados do banco/servidor
+          // Sincroniza usuário autenticado com dados atualizados do servidor sem disparar re-render cíclico
           const userServidor = usersData.find(
             (u) =>
-              (usuarioLogado?.id && u.id === usuarioLogado.id) ||
-              (usuarioLogado?.usuario && (u.usuario || "").toLowerCase() === usuarioLogado.usuario.toLowerCase()) ||
-              (usuarioLogado?.email && (u.email || "").toLowerCase() === usuarioLogado.email.toLowerCase())
+              (usuarioLogadoRef.current?.id && u.id === usuarioLogadoRef.current.id) ||
+              (usuarioLogadoRef.current?.usuario && (u.usuario || "").toLowerCase() === usuarioLogadoRef.current.usuario.toLowerCase()) ||
+              (usuarioLogadoRef.current?.email && (u.email || "").toLowerCase() === usuarioLogadoRef.current.email.toLowerCase())
           );
 
           if (userServidor) {
             usuarioAtualizadoRef = userServidor;
-            setUsuarioLogado(userServidor);
-            const fotoReal = userServidor.fotoUri
-              ? { uri: userServidor.fotoUri }
-              : (userServidor.imagemPerfil && typeof userServidor.imagemPerfil === "string" && !userServidor.imagemPerfil.includes("WhatsApp") && !userServidor.imagemPerfil.includes("top amigo")
-                ? { uri: userServidor.imagemPerfil }
-                : (userServidor.imagemPerfil || DADOS_INICIAIS.perfil.imagemPerfil));
+            // Só atualiza o estado de usuarioLogado se algum campo relevante tiver mudado
+            const mudouUsuario =
+              !usuarioLogadoRef.current ||
+              usuarioLogadoRef.current.id !== userServidor.id ||
+              usuarioLogadoRef.current.nome !== userServidor.nome ||
+              usuarioLogadoRef.current.usuario !== userServidor.usuario ||
+              usuarioLogadoRef.current.fotoUri !== userServidor.fotoUri ||
+              usuarioLogadoRef.current.bio !== userServidor.bio;
 
-            setDadosPerfil({
-              ...userServidor,
-              imagemPerfil: fotoReal,
-              fotoUri: userServidor.fotoUri || null,
-              verificado: userServidor.verificado || false,
-              seguidores: userServidor.seguidores ?? 0,
-              seguindo: userServidor.seguindo ?? 0,
-            });
+            if (mudouUsuario) {
+              setUsuarioLogado(userServidor);
+              const fotoReal = userServidor.fotoUri
+                ? { uri: userServidor.fotoUri }
+                : (userServidor.imagemPerfil && typeof userServidor.imagemPerfil === "string" && !userServidor.imagemPerfil.includes("WhatsApp") && !userServidor.imagemPerfil.includes("top amigo")
+                  ? { uri: userServidor.imagemPerfil }
+                  : (userServidor.imagemPerfil || DADOS_INICIAIS.perfil.imagemPerfil));
+
+              setDadosPerfil({
+                ...userServidor,
+                imagemPerfil: fotoReal,
+                fotoUri: userServidor.fotoUri || null,
+                verificado: userServidor.verificado || false,
+                seguidores: userServidor.seguidores ?? 0,
+                seguindo: userServidor.seguindo ?? 0,
+              });
+            }
           }
         }
         
@@ -526,27 +544,34 @@ export const ApiProvider = ({ children }) => {
           });
         }
         setIsOnline(true);
-        console.log(`[ApiContext] Servidor json-server ONLINE em: ${API_BASE_URL}`);
       } else {
         setIsOnline(false);
       }
     } catch (err) {
-      console.log("[ApiContext] Servidor json-server offline, usando estado local.");
       setIsOnline(false);
     } finally {
-      setLoading(false);
+      if (isInitial) {
+        setLoading(false);
+      }
     }
-  }, [processarPostServidor, usuarioLogado]);
+  }, [processarPostServidor]);
 
   useEffect(() => {
-    recarregarDados();
+    let ativo = true;
+    // Carga inicial com loading visível
+    recarregarDados(true);
 
-    // Sincronização periódica em segundo plano entre Android, iOS e Web
+    // Sincronização periódica em segundo plano estável e silenciosa
     const interval = setInterval(() => {
-      recarregarDados();
+      if (ativo) {
+        recarregarDados(false);
+      }
     }, 3000);
 
-    return () => clearInterval(interval);
+    return () => {
+      ativo = false;
+      clearInterval(interval);
+    };
   }, [recarregarDados]);
 
   // Autenticação: Fazer Login
@@ -675,10 +700,16 @@ export const ApiProvider = ({ children }) => {
     return { sucesso: true, usuario: novoUsuario };
   };
 
-  // Logout isolando e limpando o estado de sessão
+  // Logout isolando e limpando o estado de sessão com fallback seguro
   const fazerLogout = () => {
     setUsuarioLogado(null);
-    setDadosPerfil(null);
+    setDadosPerfil(DADOS_INICIAIS.perfil);
+    try {
+      if (typeof window !== "undefined" && window.localStorage) {
+        window.localStorage.removeItem("clicksocial_usuario_logado");
+        window.localStorage.removeItem("clicksocial_dados_perfil");
+      }
+    } catch (e) {}
   };
 
   // Adicionar notificação
@@ -707,124 +738,116 @@ export const ApiProvider = ({ children }) => {
     }
   };
 
-  // Alternar Curtida por Usuário (Isolado)
+  // Alternar Curtida por Usuário (Isolado e com persistência síncrona garantida)
   const alternarCurtidaGlobal = async (postId, onPostUpdate) => {
-    const usuarioAtual = usuarioLogado?.usuario || usuarioLogado?.nome || "Você";
-    let postAtualizado = null;
+    const usuarioAtual = usuarioLogadoRef.current?.usuario || usuarioLogadoRef.current?.nome || "Você";
+    const postAlvo = postsRef.current.find((p) => String(p.id) === String(postId));
+    if (!postAlvo) return;
+
+    const curtidoresAnteriores = Array.isArray(postAlvo.curtidores) ? postAlvo.curtidores : [];
+    const jaCurtido = curtidoresAnteriores.includes(usuarioAtual);
+
+    const novosCurtidores = jaCurtido
+      ? curtidoresAnteriores.filter((u) => u !== usuarioAtual)
+      : [...curtidoresAnteriores, usuarioAtual];
+
+    const novasCurtidas = jaCurtido
+      ? Math.max(0, (postAlvo.curtidas || 0) - 1)
+      : (postAlvo.curtidas || 0) + 1;
+
+    const postAtualizado = {
+      ...postAlvo,
+      curtidas: novasCurtidas,
+      curtidores: novosCurtidores,
+      curtido: !jaCurtido,
+    };
 
     setPosts((postsAnteriores) => {
-      const novosPosts = postsAnteriores.map((p) => {
-        if (p.id === postId) {
-          const curtidoresAnteriores = Array.isArray(p.curtidores) ? p.curtidores : [];
-          const jaCurtido = curtidoresAnteriores.includes(usuarioAtual);
-
-          const novosCurtidores = jaCurtido
-            ? curtidoresAnteriores.filter((u) => u !== usuarioAtual)
-            : [...curtidoresAnteriores, usuarioAtual];
-
-          const novasCurtidas = jaCurtido
-            ? Math.max(0, (p.curtidas || 0) - 1)
-            : (p.curtidas || 0) + 1;
-
-          postAtualizado = {
-            ...p,
-            curtidas: novasCurtidas,
-            curtidores: novosCurtidores,
-            curtido: !jaCurtido,
-          };
-
-          return postAtualizado;
-        }
-        return p;
-      });
+      const novosPosts = postsAnteriores.map((p) => (String(p.id) === String(postId) ? postAtualizado : p));
       return ordenarPostsPorData(novosPosts);
     });
 
-    if (postAtualizado) {
-      if (onPostUpdate) onPostUpdate(postAtualizado);
-      if (postAtualizado.curtido) {
-        adicionarNotificacao({
-          tipo: "curtida",
-          usuario: usuarioAtual,
-          texto: `Curtiu a publicação de ${postAtualizado.user || "um usuário"}`,
-          postId: postAtualizado.id,
-        });
-      }
-
-      try {
-        await fetch(`${API_BASE_URL}/posts/${postId}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            curtidas: postAtualizado.curtidas,
-            curtidores: postAtualizado.curtidores,
-            curtido: postAtualizado.curtido,
-          }),
-        });
-      } catch (e) {
-        console.log("[ApiContext] Servidor json-server offline ao atualizar curtida (usando modo local).");
-      }
+    if (onPostUpdate) onPostUpdate(postAtualizado);
+    if (postAtualizado.curtido) {
+      adicionarNotificacao({
+        tipo: "curtida",
+        usuario: usuarioAtual,
+        texto: `Curtiu a publicação de ${postAtualizado.user || "um usuário"}`,
+        postId: postAtualizado.id,
+      });
     }
+
+    try {
+      await fetch(`${API_BASE_URL}/posts/${postId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          curtidas: postAtualizado.curtidas,
+          curtidores: postAtualizado.curtidores,
+          curtido: postAtualizado.curtido,
+        }),
+      });
+    } catch (e) {
+      console.log("[ApiContext] Servidor json-server offline ao atualizar curtida (usando modo local).");
+    }
+
+    return postAtualizado;
   };
 
-  // Alternar Republicado por Usuário (Sem disparo automático de repost)
+  // Alternar Republicado por Usuário com persistência síncrona
   const alternarRepublicadoGlobal = async (postId, onPostUpdate) => {
-    const usuarioAtual = usuarioLogado?.usuario || usuarioLogado?.nome || "Você";
-    let postAtualizado = null;
+    const usuarioAtual = usuarioLogadoRef.current?.usuario || usuarioLogadoRef.current?.nome || "Você";
+    const postAlvo = postsRef.current.find((p) => String(p.id) === String(postId));
+    if (!postAlvo) return;
+
+    const republicadoresAnteriores = Array.isArray(postAlvo.republicadores) ? postAlvo.republicadores : [];
+    const jaRepublicado = republicadoresAnteriores.includes(usuarioAtual);
+
+    const novosRepublicadores = jaRepublicado
+      ? republicadoresAnteriores.filter((u) => u !== usuarioAtual)
+      : [...republicadoresAnteriores, usuarioAtual];
+
+    const novosRepostsCount = jaRepublicado
+      ? Math.max(0, (postAlvo.repostsCount || 0) - 1)
+      : (postAlvo.repostsCount || 0) + 1;
+
+    const postAtualizado = {
+      ...postAlvo,
+      repostsCount: novosRepostsCount,
+      republicadores: novosRepublicadores,
+      republicado: !jaRepublicado,
+    };
 
     setPosts((postsAnteriores) => {
-      const novosPosts = postsAnteriores.map((p) => {
-        if (p.id === postId) {
-          const republicadoresAnteriores = Array.isArray(p.republicadores) ? p.republicadores : [];
-          const jaRepublicado = republicadoresAnteriores.includes(usuarioAtual);
-
-          const novosRepublicadores = jaRepublicado
-            ? republicadoresAnteriores.filter((u) => u !== usuarioAtual)
-            : [...republicadoresAnteriores, usuarioAtual];
-
-          const novosRepostsCount = jaRepublicado
-            ? Math.max(0, (p.repostsCount || 0) - 1)
-            : (p.repostsCount || 0) + 1;
-
-          postAtualizado = {
-            ...p,
-            repostsCount: novosRepostsCount,
-            republicadores: novosRepublicadores,
-            republicado: !jaRepublicado,
-          };
-
-          return postAtualizado;
-        }
-        return p;
-      });
+      const novosPosts = postsAnteriores.map((p) => (String(p.id) === String(postId) ? postAtualizado : p));
       return ordenarPostsPorData(novosPosts);
     });
 
-    if (postAtualizado) {
-      if (onPostUpdate) onPostUpdate(postAtualizado);
-      if (postAtualizado.republicado) {
-        adicionarNotificacao({
-          tipo: "repost",
-          usuario: usuarioAtual,
-          texto: `Republicou a publicação de ${postAtualizado.user || "um usuário"}`,
-          postId: postAtualizado.id,
-        });
-      }
-
-      try {
-        await fetch(`${API_BASE_URL}/posts/${postId}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            repostsCount: postAtualizado.repostsCount,
-            republicadores: postAtualizado.republicadores,
-            republicado: postAtualizado.republicado,
-          }),
-        });
-      } catch (e) {
-        console.log("[ApiContext] Servidor json-server offline ao atualizar republicação (usando modo local).");
-      }
+    if (onPostUpdate) onPostUpdate(postAtualizado);
+    if (postAtualizado.republicado) {
+      adicionarNotificacao({
+        tipo: "repost",
+        usuario: usuarioAtual,
+        texto: `Republicou a publicação de ${postAtualizado.user || "um usuário"}`,
+        postId: postAtualizado.id,
+      });
     }
+
+    try {
+      await fetch(`${API_BASE_URL}/posts/${postId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          repostsCount: postAtualizado.repostsCount,
+          republicadores: postAtualizado.republicadores,
+          republicado: postAtualizado.republicado,
+        }),
+      });
+    } catch (e) {
+      console.log("[ApiContext] Servidor json-server offline ao atualizar republicação (usando modo local).");
+    }
+
+    return postAtualizado;
   };
 
   // Adicionar novo post com createdAt e ordenação cronológica garantida
@@ -892,12 +915,18 @@ export const ApiProvider = ({ children }) => {
     }
   };
 
-  // Adicionar comentário em um post e retornar o objeto atualizado para tempo real
+  // Adicionar comentário em um post e persistir com retorno síncrono imediato
   const adicionarComentario = async (postId, comentarioTexto, parentCommentId = null) => {
-    let postAtualizado = null;
-    const autorNome = usuarioLogado?.nome || dadosPerfil.nome || "Você";
-    const autorUsuario = usuarioLogado?.usuario || dadosPerfil.usuario || "meu_usuario";
-    const autorFoto = usuarioLogado?.fotoUri || dadosPerfil?.fotoUri || (typeof dadosPerfil?.imagemPerfil === "string" ? dadosPerfil.imagemPerfil : dadosPerfil?.imagemPerfil?.uri) || null;
+    const postAlvo = postsRef.current.find((p) => String(p.id) === String(postId));
+    if (!postAlvo) return null;
+
+    const autorNome = usuarioLogadoRef.current?.nome || dadosPerfilRef.current?.nome || "Você";
+    const autorUsuario = usuarioLogadoRef.current?.usuario || dadosPerfilRef.current?.usuario || "meu_usuario";
+    const autorFoto =
+      usuarioLogadoRef.current?.fotoUri ||
+      dadosPerfilRef.current?.fotoUri ||
+      (typeof dadosPerfilRef.current?.imagemPerfil === "string" ? dadosPerfilRef.current.imagemPerfil : dadosPerfilRef.current?.imagemPerfil?.uri) ||
+      null;
 
     const novoComentarioObj = {
       id: String(Date.now()),
@@ -913,35 +942,33 @@ export const ApiProvider = ({ children }) => {
       avatar: autorFoto,
     };
 
-    setPosts((prevPosts) => {
-      const atualizados = prevPosts.map((p) => {
-        if (p.id === postId) {
-          let comentariosNovos = [];
-          if (parentCommentId) {
-            comentariosNovos = (p.comentarios || []).map((c) => {
-              if (c.id === parentCommentId) {
-                const listaRespostas = Array.isArray(c.respostasLista) ? c.respostasLista : [];
-                return {
-                  ...c,
-                  respostas: (c.respostas || 0) + 1,
-                  respostasLista: [...listaRespostas, novoComentarioObj],
-                };
-              }
-              return c;
-            });
-          } else {
-            comentariosNovos = [...(p.comentarios || []), novoComentarioObj];
-          }
+    let comentariosNovos = [];
+    const comentariosExistentes = Array.isArray(postAlvo.comentarios) ? postAlvo.comentarios : [];
 
-          postAtualizado = {
-            ...p,
-            comentarios: comentariosNovos,
-            comentariosCount: comentariosNovos.length,
+    if (parentCommentId) {
+      comentariosNovos = comentariosExistentes.map((c) => {
+        if (String(c.id) === String(parentCommentId)) {
+          const listaRespostas = Array.isArray(c.respostasLista) ? c.respostasLista : [];
+          return {
+            ...c,
+            respostas: (c.respostas || 0) + 1,
+            respostasLista: [...listaRespostas, novoComentarioObj],
           };
-          return postAtualizado;
         }
-        return p;
+        return c;
       });
+    } else {
+      comentariosNovos = [...comentariosExistentes, novoComentarioObj];
+    }
+
+    const postAtualizado = {
+      ...postAlvo,
+      comentarios: comentariosNovos,
+      comentariosCount: comentariosNovos.length,
+    };
+
+    setPosts((prevPosts) => {
+      const atualizados = prevPosts.map((p) => (String(p.id) === String(postId) ? postAtualizado : p));
       return ordenarPostsPorData(atualizados);
     });
 
@@ -952,62 +979,56 @@ export const ApiProvider = ({ children }) => {
       postId,
     });
 
-    if (postAtualizado) {
-      try {
-        await fetch(`${API_BASE_URL}/posts/${postId}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            comentarios: postAtualizado.comentarios,
-            comentariosCount: postAtualizado.comentariosCount,
-          }),
-        });
-      } catch (e) {
-        console.log("[ApiContext] Servidor json-server offline ao adicionar comentário (usando modo local).");
-      }
+    try {
+      await fetch(`${API_BASE_URL}/posts/${postId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          comentarios: postAtualizado.comentarios,
+          comentariosCount: postAtualizado.comentariosCount,
+        }),
+      });
+    } catch (e) {
+      console.log("[ApiContext] Servidor json-server offline ao adicionar comentário (usando modo local).");
     }
 
     return postAtualizado;
   };
 
-  // Alternar Curtida de um Comentário Específico (BUG 5 RESOLVIDO)
+  // Alternar Curtida de um Comentário Específico com persistência síncrona
   const alternarCurtidaComentarioGlobal = async (postId, commentId) => {
-    let postAtualizado = null;
+    const postAlvo = postsRef.current.find((p) => String(p.id) === String(postId));
+    if (!postAlvo) return null;
+
+    const comentariosNovos = (postAlvo.comentarios || []).map((c) => {
+      if (String(c.id) === String(commentId)) {
+        const novoCurtido = !c.curtido;
+        return {
+          ...c,
+          curtido: novoCurtido,
+          curtidas: novoCurtido ? (c.curtidas || 0) + 1 : Math.max(0, (c.curtidas || 0) - 1),
+        };
+      }
+      return c;
+    });
+
+    const postAtualizado = { ...postAlvo, comentarios: comentariosNovos };
 
     setPosts((prevPosts) => {
-      const atualizados = prevPosts.map((p) => {
-        if (p.id === postId) {
-          const comentariosNovos = (p.comentarios || []).map((c) => {
-            if (c.id === commentId) {
-              const novoCurtido = !c.curtido;
-              return {
-                ...c,
-                curtido: novoCurtido,
-                curtidas: novoCurtido ? (c.curtidas || 0) + 1 : Math.max(0, (c.curtidas || 0) - 1),
-              };
-            }
-            return c;
-          });
-          postAtualizado = { ...p, comentarios: comentariosNovos };
-          return postAtualizado;
-        }
-        return p;
-      });
+      const atualizados = prevPosts.map((p) => (String(p.id) === String(postId) ? postAtualizado : p));
       return ordenarPostsPorData(atualizados);
     });
 
-    if (postAtualizado) {
-      try {
-        await fetch(`${API_BASE_URL}/posts/${postId}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            comentarios: postAtualizado.comentarios,
-          }),
-        });
-      } catch (e) {
-        console.log("[ApiContext] Servidor json-server offline ao curtir comentário (usando modo local).");
-      }
+    try {
+      await fetch(`${API_BASE_URL}/posts/${postId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          comentarios: postAtualizado.comentarios,
+        }),
+      });
+    } catch (e) {
+      console.log("[ApiContext] Servidor json-server offline ao curtir comentário (usando modo local).");
     }
 
     return postAtualizado;
