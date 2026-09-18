@@ -94,17 +94,15 @@
       "accent": "#5ef9d6",
       "avatar": "WhatsApp Image 2026-08-25 at 11.25.57 2.png",
       "image": "12 Sem Título_20260828133808.jpg",
-      "curtidas": 125,
+      "curtidas": 124,
       "curtidores": [
-        "Arthurbr-YT",
-        "jao"
+        "Arthurbr-YT"
       ],
-      "curtido": true,
+      "curtido": false,
       "comentariosCount": 2,
-      "republicado": true,
+      "republicado": false,
       "republicadores": [
-        "Arthurbr-YT",
-        "jao"
+        "Arthurbr-YT"
       ],
       "tags": [
         "Canal",
@@ -127,7 +125,7 @@
           "curtido": false
         }
       ],
-      "repostsCount": 2
+      "repostsCount": 1
     },
     {
       "id": "2",
@@ -741,6 +739,15 @@
       "horario": "Agora",
       "createdAt": 1789733793619,
       "postId": "1"
+    },
+    {
+      "id": "fTH_GxMnVAo",
+      "tipo": "curtida",
+      "usuario": "jao",
+      "texto": "Curtiu a publicação de keber",
+      "horario": "Agora",
+      "createdAt": 1789734217905,
+      "postId": "pRWXIolnJUU"
     }
   ],
   "perfil": {

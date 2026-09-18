@@ -226,7 +226,7 @@ export default function Feed({
                   <View style={Feedstyles.UserTextWrap}>
                     <Text style={Feedstyles.UserName}>{post.user}</Text>
                     <Text style={Feedstyles.MetaText}>
-                      {post.time || "Agora"}{post.localizacao ? ` • 📍 ${post.localizacao}` : ""}
+                      {post.time || "Agora"}
                     </Text>
                   </View>
 
